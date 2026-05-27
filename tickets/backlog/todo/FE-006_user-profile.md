@@ -58,6 +58,10 @@ winner/secretWinner fields come from the local DB.
 ### Stat tiles
 - [ ] 4 tiles: EXACT (sum_win_exact), DIFF (sum_score_diff), WINS (sum_team), BONUS (extra_point)
 - [ ] Numbers in `font-mono` (JetBrains Mono)
+- [ ] BONUS tile is the **only** place where tournament/secret-winner
+      bonuses (+15 / +7) appear. They are aggregated into one number
+      (0, 7, 15, or 22). They must **never** appear as per-match points
+      in the history table below.
 
 ### Winner cards
 - [ ] Two cards side-by-side: TOURNAMENT WINNER (label) + flag of `user.winner`
@@ -83,17 +87,25 @@ winner/secretWinner fields come from the local DB.
 
 ## Verification (manual)
 
-1. Log in as `philipp@lahm.de` (id 3, winner=ESP, +15 bonus)
-2. Click "Profile" in nav → land on `/user/3`
-3. Header shows PhilippLahm, rank #1, 23 points
-4. Stat tiles: EXACT=1, DIFF=1, WINS=2, BONUS=15
-5. Winner card shows Spain flag with trophy icon
-6. Secret Winner card shows England flag with hidden-eye icon
-7. History table lists all 5 of PhilippLahm's tips, sorted by date DESC
-   (live ESP-ENG at top with +4 green), correct colors throughout
-8. Click on the ESP-ENG row → navigates to `/match/5`
-9. Visit `/user/7` (Steve McManaman, hardly any tips) → page renders
-   with sparse history table
+> Pre-requisite: FE-007 seed loaded. Login convention: `me@dev.local`
+> (TestUser, Langenfeld) is the "me" user. Other usernames below come
+> from the FE-007 seed (Ada Lovelace, Alan Turing, …).
+
+1. Log in as `me@dev.local` / `test123`
+2. Click "Profile" in the nav → land on `/user/{my-id}`
+3. Header shows `TestUser`, the global rank derived from the Rust
+   `/rating` endpoint, and the real total points (no placeholders)
+4. Stat tiles render the real EXACT / DIFF / WINS / BONUS values from
+   the Rust `/user/{id}` response — numbers in JetBrains Mono
+5. Winner card shows the flag of TestUser's `winner` with trophy icon;
+   Secret Winner card shows the `secretWinner` flag with hidden-eye icon
+6. History table lists every tip sorted by date DESC; points column
+   contains only `+4`, `+2`, `+1`, `0` (no `+150`, no `+50`, no bonus
+   values per match)
+7. Each match row links to `/match/{id}` — clicking navigates correctly
+8. Visit `/user/{id-of-another-seeded-user}` (e.g. AdaLovelace) →
+   page renders with that user's stats and history
+9. Visit `/user/9999` (non-existent) → 404 (or redirect to `/`)
 
 ## Notes
 

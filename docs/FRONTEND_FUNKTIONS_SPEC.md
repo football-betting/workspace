@@ -467,29 +467,39 @@ db/database.db      ⚠️ DB-File nicht im Repo
 
 ---
 
-## 13) Tailwind-Theme / Typografie (wird neu designed — aber Funktion erhalten)
+## 13) Theme / Typografie (Neubau)
 
-### 13.1 `tailwind.config.mjs`
-```js
-screens: { xs: '450px' }   // Custom Breakpoint zusätzlich zu sm/md/lg/xl
-fontFamily: { sans: ['Chakra Petch'], italic: ['Chakra Petch'] }
-fontSize:   { xs: ['0.6rem','0.8rem'], base: ['1rem','1.3rem'],
-              'text-2xl': ['1.4rem','1.7rem'], heading: ['1.625rem','1.95rem'] }
-fontWeight: { normal: '400' }
-plugins:    [@tailwindcss/forms, addBase({ h1..h6: 'Bebas Neue', body: 'Chakra Petch' })]
-```
+> **Quelle der Wahrheit für Design-Tokens:** `frontend/design/DESIGN.md`.
+> Dieser Abschnitt fasst nur die Schrift-Wahl zusammen — alles andere
+> (Farben, Spacing, Radii, Komponenten) wird beim Bootstrap (FE-001) aus
+> `DESIGN.md` ins Tailwind-v4 `@theme`-Block portiert.
 
-### 13.2 Fonts (`public/fonts/`)
-Sieben TTF-Dateien werden via `@font-face` in `src/styles/global.css` geladen:
-- **Chakra Petch** Regular/SemiBold/Italic → Body + UI
-- **Bebas Neue** Regular → alle Headings (h1–h6 via addBase)
-- **Gilroy** Regular → `.gilroy`-Klasse (im Logo verwendet)
-- **Note Sans** Regular → `.note_sans` (Input-Labels)
-- **Seven Segment** → `.seven-segmnet` (sic, Tippfehler!) — wird im UI für Zahlen/Zeitangaben verwendet (Score-Anzeige, Match-Zeiten)
+### 13.1 Tailwind v4 `@theme`
+Die alten v3-spezifischen Config-Felder (`tailwind.config.mjs`) entfallen.
+Tokens werden in `app/globals.css` via `@theme` deklariert. Der Pflicht-Stack:
 
-→ Im Neubau:
-- **Neues Design**: Fonts dürfen ersetzt werden — aber die Funktion **"Score-Zahlen sehen aus wie Digital-Display"** ist eine UX-Entscheidung, kein zufälliges Detail.
-- Tipfehler `.seven-segmnet` korrigieren.
+- `--font-sans: 'Hanken Grotesk'` (Body, UI, Headlines)
+- `--font-mono: 'JetBrains Mono'` (Tabellen-Zahlen, Score-Anzeige, Match-Zeiten)
+
+Beide Fonts via `next/font/google` — keine TTF-Dateien mehr im Repo,
+keine `@font-face`-Blöcke in `globals.css`.
+
+### 13.2 Schriftverwendung
+- **Hanken Grotesk** Regular/SemiBold/Bold/ExtraBold → Body + UI + alle
+  Headlines (`display`, `headline-lg`, `headline-md`, `body-lg`, `body-sm`).
+- **JetBrains Mono** → Score-Zahlen, Punkte-Werte, Match-Minute, Kick-off-Zeit,
+  Ranking-Tabellen-Zahlen.
+
+> Die UX-Intention „Score-Zahlen lesen sich wie Digital-Display" wird im
+> neuen Design über JetBrains Mono + `font-weight: bold` + `letter-spacing`
+> erfüllt. Die alten Schriften (Chakra Petch, Bebas Neue, Seven Segment)
+> entfallen — der `.seven-segmnet`-Tippfehler ist damit gegenstandslos.
+
+### 13.3 Icons
+**Material Symbols Outlined** (Icon Font, via `<link>` in `<head>`).
+**Keine Inline-SVGs** und **keine** SVG-Icon-Libraries (`lucide-react`,
+`@heroicons/react`, `react-icons`, `@radix-ui/react-icons`).
+Flaggen weiterhin als statische SVG-Dateien unter `public/svg/<TLA>.svg`.
 
 ### 13.3 Layout-Patterns die übernommen werden müssen (nicht das Styling)
 | Pattern                        | Wofür                                                                    |
@@ -650,6 +660,24 @@ fetchApi<T>(endpoint: string, wrappedByKey?: string): Promise<T>
 ## 19) Empfehlungen für den Neubau (was man besser machen sollte)
 
 Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit und UX **ohne** das Spielprinzip zu ändern.
+
+> **Mapping zu Tickets (Stand: Backlog-Audit 2026-05-27):**
+>
+> - **In FE-002 adressiert:** generische Login-Fehler, Logout POST,
+>   Argon2id-Parameter, Passwort-Policy ≥8, Email-Regex (Zod),
+>   Rate-Limit auf `/api/auth/login` + `/api/user`, Secure-Cookies.
+> - **In FE-008 adressiert:** `Origin: RUST_APPLICATION` →
+>   API-Key-Header für `/api/match/import`.
+> - **In FE-009 (Security-Audit) adressiert:** CSRF-Token auf Forms,
+>   Header-Hardening (CSP, X-Frame-Options, Permissions-Policy),
+>   Dependency-Audit.
+> - **Aufgeschoben / Tech-Debt (kein Ticket, bewusst zurückgestellt):**
+>   `username UNIQUE`-Constraint, `tip.userId NOT NULL`,
+>   `tip.matchId NOT NULL`, `'Maintz'`-Tippfehler in DB. Grund:
+>   Schema 1:1 mit Astro-Vorgänger erhalten, damit `betting-api` und
+>   `macht-api` (Rust-Structs) unangetastet bleiben. Wenn dieses
+>   Tech-Debt später angegangen wird: XR-Ticket mit koordinierten
+>   Drizzle-Migration + Rust-Struct-Updates.
 
 ### 19.1 Sicherheit
 - **CSRF-Token** auf allen POST-Forms (heute nur Origin/Host-Check — anfällig gegen Same-Origin-XSS).

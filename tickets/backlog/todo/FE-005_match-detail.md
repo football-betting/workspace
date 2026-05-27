@@ -51,15 +51,23 @@ local DB for match info, Rust API (`GET /game/{id}`) for the tip list.
 - [ ] Invalid match ID → redirect to `/` (or render 404)
 - [ ] Match header shows both teams with `/svg/{tla}.svg` flags
 - [ ] Status badge: `LIVE` (pulsing red dot) / `FINISHED` (neutral) / `SCHEDULED` (subtle)
-- [ ] For SCHEDULED matches: show kickoff time instead of score (e.g. `20:00 — Tomorrow`)
-- [ ] For IN_PLAY: show match minute (e.g. `64'`) under the score
+- [ ] For SCHEDULED matches: show kickoff time in German locale
+      (e.g. `Sa, 15. Juni · 18:00`) instead of the score
+- [ ] For IN_PLAY: show match minute under the score (e.g. `64'`) — if the
+      Rust API does not yet expose minute, render `LIVE` only and document
+      the gap; do not fabricate a minute
 - [ ] For FINISHED: show "Full Time" sublabel
 
 ### Predictions table
 - [ ] All users who tipped this match are listed; users without a tip are omitted
 - [ ] Sorted by `score DESC` (4 pts first)
 - [ ] Each row: rank, avatar circle with initials, full name, prediction `X - Y`, points pill
-- [ ] Points pill colors: 4=green, 2=yellow, 1=neutral, 0=red — **NOT** the wrong "Correct Outcome 2 pts" label from the mockup
+- [ ] Points pill colors: 4=green, 2=yellow, 1=neutral, 0=red
+- [ ] **Label consistency** (the HTML mockup has these paired wrong — fix
+      while porting): `4 pts = Exact Score`, `2 pts = Goal Difference`,
+      `1 pt = Correct Outcome`, `0 pts = Wrong`. If any label appears in
+      the page (e.g. as a tooltip or legend), it must use these exact
+      pairings.
 - [ ] Current user row highlighted (primary tint background + left border)
 - [ ] Avatar background color derived from username hash (deterministic, no online indicators / verification badges)
 
@@ -70,13 +78,20 @@ local DB for match info, Rust API (`GET /game/{id}`) for the tip list.
 
 ## Verification (manual)
 
-1. Log in as `philipp@lahm.de`, click on the live ESP-ENG match from dashboard
-2. Match detail loads → header shows 1:1 with LIVE badge pulsing
-3. Predictions table: PhilippLahm row highlighted with `1:1` and `+4` (green)
-4. Other users with various tips and points (mix of colors visible)
-5. Click an avatar/name → navigates to `/user/{id}`
-6. Navigate to `/match/1` (Germany 2:0 Spain, FINISHED) → header shows FINISHED, table shows tips sorted with exact matches at top
-7. Navigate to `/match/9` (scheduled, future match) → no predictions table or empty placeholder; score area shows kickoff time
+> Pre-requisite: FE-007 seed loaded. Login as `me@dev.local` / `test123`
+> (TestUser, Langenfeld). Match IDs below refer to the FE-007 seed.
+
+1. From the dashboard, click on a live (IN_PLAY) match → match detail loads
+2. Header shows the running score with a LIVE badge pulsing red
+3. Predictions table: TestUser row highlighted; mix of point colors visible
+   across all listed users (green/yellow/neutral/red)
+4. Click another user's avatar/name → navigates to `/user/{id}`
+5. Open a FINISHED match → header shows "Full Time" sublabel; table is
+   sorted with 4-pt rows at the top
+6. Open a SCHEDULED match → header shows kickoff time in German locale
+   instead of a score; predictions area shows the empty-state placeholder
+   (no one has tipped yet OR predictions are hidden until kickoff,
+   whichever the spec prescribes — match it)
 
 ## Notes
 

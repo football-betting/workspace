@@ -47,6 +47,8 @@ Specs are authoritative:
   `em2024-frontend/src/middleware.ts`)
 - `lib/api.ts` helper for calls to the Rust `betting-api` (`process.env.RUST_API_URL`,
   default `http://localhost:8080`)
+- `lib/data/departments.ts` constants: DB values `['Langenfeld', 'Mannheim', 'Maintz']`
+  + `displayDepartment(dbValue)` helper that maps `'Maintz'` → `'Mainz'` (per spec §8.6 / §1)
 - Copy all 24 flag SVGs from `em2024-frontend/public/svg/` →
   `frontend/public/svg/`
 - `.env.example` documenting `DATABASE_URL` and `RUST_API_URL`
@@ -84,6 +86,9 @@ Specs are authoritative:
       `next/font/google` and adds the Material Symbols `<link>` in `<head>`
 - [ ] `db/schema.ts` matches `em2024-frontend/db/schemas/schema.ts` 1:1
       (four tables: `user`, `match`, `session`, `tip`)
+- [ ] `lib/data/departments.ts` exports `DEPARTMENTS = ['Langenfeld',
+      'Mannheim', 'Maintz']` and `displayDepartment(db: string): string`
+      that returns `'Mainz'` for `'Maintz'`, otherwise the input unchanged
 - [ ] Drizzle migration generated and committed in `db/migrations/`
 - [ ] Lucia is initialised in `lib/auth.ts` with the Drizzle adapter,
       `secure` cookie in production, Argon2id ready to use
