@@ -1,0 +1,86 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo build:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(rustfmt:*)",
+
+      "Bash(pnpm install:*)",
+      "Bash(pnpm run:*)",
+      "Bash(pnpm exec:*)",
+      "Bash(pnpm dlx:*)",
+      "Bash(pnpm test:*)",
+      "Bash(pnpm dev:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm db:*)",
+      "Bash(tsx:*)",
+      "Bash(node:*)",
+
+      "Bash(git log:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(git stash:*)",
+      "Bash(git show:*)",
+      "Bash(git restore:*)",
+
+      "Bash(mv:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(rg:*)",
+      "Bash(grep:*)",
+      "Bash(find:*)",
+      "Bash(wc:*)",
+      "Bash(jq:*)",
+      "Bash(pwd:*)",
+
+      "Bash(bash -n .claude/hooks/style-fix.sh)",
+      "Bash(bash -n .claude/hooks/confidentiality-check.sh)",
+      "Bash(python3 -m json.tool .claude/settings.local.json.example)",
+
+      "mcp__plugin_context7_context7__resolve-library-id",
+      "mcp__plugin_context7_context7__query-docs"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(rm:*)",
+      "Bash(rm -rf:*)",
+      "Bash(cargo publish:*)",
+      "Bash(pnpm publish:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/style-fix.sh\""
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/.claude/hooks/confidentiality-check.sh\""
+          }
+        ]
+      }
+    ]
+  },
+  "enabledPlugins": {}
+}

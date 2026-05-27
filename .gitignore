@@ -1,0 +1,20 @@
+# Service repos — cloned in via bootstrap, each has its own .git
+frontend/
+betting-api/
+macht-api/
+em2024-frontend/
+
+# Shared DB files — never committed
+shared/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# OS / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Local Claude settings (the .example is committed)
+.claude/settings.local.json
