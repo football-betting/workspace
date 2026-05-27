@@ -495,11 +495,51 @@ keine `@font-face`-Blöcke in `globals.css`.
 > erfüllt. Die alten Schriften (Chakra Petch, Bebas Neue, Seven Segment)
 > entfallen — der `.seven-segmnet`-Tippfehler ist damit gegenstandslos.
 
-### 13.3 Icons
-**Material Symbols Outlined** (Icon Font, via `<link>` in `<head>`).
-**Keine Inline-SVGs** und **keine** SVG-Icon-Libraries (`lucide-react`,
-`@heroicons/react`, `react-icons`, `@radix-ui/react-icons`).
-Flaggen weiterhin als statische SVG-Dateien unter `public/svg/<TLA>.svg`.
+### 13.3 Icons — font-loaded + browser-cached only
+
+**Harte Regel:** Ein Icon darf **null nennenswerte Bytes** zum HTML
+hinzufügen, das der Server schickt. Das Icon-Asset selbst wird **einmal**
+geladen (Font-Datei oder Sprite/PNG) und vom Browser für alle weiteren
+Aufrufe gecached.
+
+**Pflicht-Mechanismus für alle UI-Icons: Material Symbols Outlined.**
+Eingebunden via `<link>` in `<head>` von `app/layout.tsx`. Verwendung:
+
+```tsx
+<span className="material-symbols-outlined">home</span>
+```
+
+→ Im HTML steht pro Icon nur ein `<span>` mit dem Icon-Namen als Text
+(≈30 Bytes). Die Font-Datei wird einmalig geladen, der Browser cached
+sie für die gesamte Session.
+
+**Fallback (nur falls Material Symbols ein Icon nicht hat):** eine
+einzelne PNG- oder SVG-Datei aus `public/icons/`, referenziert als
+`<img src="/icons/foo.svg" />` oder als CSS-Background-Sprite. Nie inline.
+
+**Verboten:**
+- Inline `<svg>…</svg>` in JSX
+- `dangerouslySetInnerHTML` mit SVG-Inhalt
+- SVG-as-React-Component (`import Icon from './icon.svg'`), SVGR-Loader
+- Icon-Bibliotheken mit Per-Icon-React-Components:
+  `lucide-react`, `@heroicons/react`, `react-icons`,
+  `@radix-ui/react-icons`, `@tabler/icons-react` und alle weiteren mit
+  dem `import { Icon } from 'lib'; <Icon />`-Pattern.
+
+**Flaggen** (24 Dateien in `public/svg/<TLA>.svg`) sind die einzigen
+SVG-Assets im Projekt und werden ausschließlich als `<img>` referenziert,
+niemals inline.
+
+**Verifikations-Grep für CI / Pre-Merge:**
+
+```bash
+grep -rn "<svg" app/ components/ lib/
+grep -rn "dangerouslySetInnerHTML" app/ components/ lib/
+grep -rn "lucide-react|@heroicons|react-icons|@radix-ui/react-icons|@tabler/icons-react" \
+  --include='*.ts' --include='*.tsx' --include='*.json' .
+```
+
+Alle drei Greps müssen 0 Treffer liefern.
 
 ### 13.3 Layout-Patterns die übernommen werden müssen (nicht das Styling)
 | Pattern                        | Wofür                                                                    |
