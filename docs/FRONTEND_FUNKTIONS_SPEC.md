@@ -117,7 +117,7 @@ tip {
 | `/api/auth/password-forget` | - | POST       | **stub / Body komplett auskommentiert** — gibt 302 auf `/admin/login` (dead route)                                                                                                                                     |
 | `/api/user`          | -      | POST           | Signup-Handler (siehe §5.2)                                                                                                                                                                                             |
 | `/api/tip/[matchId]` | ✅     | POST           | Tipp speichern/aktualisieren (siehe §5.3)                                                                                                                                                                               |
-| `/api/match/import`  | -      | POST           | **Schreib-Hook für `macht-api`** — Rust postet matches als JSON, Frontend macht upsert in `match`. Sicherheit via Middleware-Bypass-Header `Origin: RUST_APPLICATION` (siehe §4.3). ⚠️ schwach.                          |
+| ~~`/api/match/import`~~ | — | — | Entfernt in FE-019. `macht-api` schreibt direkt in SQLite. |
 
 ---
 
@@ -137,7 +137,7 @@ const ok = await new Argon2id().verify(hash, plainPassword);
 ### 4.3 Middleware (`src/middleware.ts`)
 Läuft bei **jedem Request**:
 
-1. CSRF-Schutz: Für alle Non-GET-Requests wird `Origin` gegen `Host` geprüft via `verifyRequestOrigin(originHeader, [hostHeader])`. **Ausnahme**: `Origin: RUST_APPLICATION` → erlaubt (für `/api/match/import`).
+1. CSRF-Schutz: Für alle Non-GET-Requests wird `Origin` gegen `Host` geprüft via `verifyRequestOrigin(originHeader, [hostHeader])`. (Die historische `Origin: RUST_APPLICATION`-Ausnahme für `/api/match/import` ist mit FE-019 weggefallen — der Endpoint existiert nicht mehr.)
 2. Session-Cookie lesen → `lucia.validateSession()` → wenn `session.fresh` neue Cookie setzen, sonst leere Cookie.
 3. `context.locals.user` und `context.locals.session` setzen (oder beide `null`).
 
@@ -211,11 +211,10 @@ Flow:
 
 ⚠️ HTTP-Codes inkonsistent: validation-fail = 401 statt 400. Im Neubau richtig setzen.
 
-### 5.4 `POST /api/match/import`
-Input: JSON-Body eines Match-Objekts.
-Flow: upsert in `match` per `id`. Body wird durchgereicht (keine Validierung!).
-Antwort: `200 "OK bruder"`.
-**Aktuell unbenutzt** — `macht-api` schreibt direkt in SQLite via Rust. Dieser Endpoint ist eine Alternative für netzwerkgetrennte Setups.
+### 5.4 `POST /api/match/import` — **entfernt in FE-019 (2026-05-28)**
+Der Endpoint ist im Neubau nicht mehr enthalten. `macht-api` schreibt
+weiterhin direkt in SQLite via `rusqlite`. Demo-Daten kommen aus
+`scripts/demo_data.ts` über `pnpm db:seed` (FE-007).
 
 ### 5.5 `GET /api/auth/logout`
 - 401 wenn keine Session
@@ -706,8 +705,9 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 > - **In FE-002 adressiert:** generische Login-Fehler, Logout POST,
 >   Argon2id-Parameter, Passwort-Policy ≥8, Email-Regex (Zod),
 >   Rate-Limit auf `/api/auth/login` + `/api/user`, Secure-Cookies.
-> - **In FE-008 adressiert:** `Origin: RUST_APPLICATION` →
->   API-Key-Header für `/api/match/import`.
+> - **Per FE-019 entfernt:** `/api/match/import` und damit auch die
+>   `Origin: RUST_APPLICATION`-Ausnahme. macht-api schreibt direkt
+>   in SQLite; der HTTP-Hook war ungenutzt.
 > - **In FE-009 (Security-Audit) adressiert:** CSRF-Token auf Forms,
 >   Header-Hardening (CSP, X-Frame-Options, Permissions-Policy),
 >   Dependency-Audit.

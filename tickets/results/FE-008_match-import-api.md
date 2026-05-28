@@ -20,3 +20,18 @@ This was a multi-repo ticket (frontend + macht-api). Only the frontend half is i
 
 ## Reviewer verdict — APPROVE
 Auth boundary verified (constant-time + identical body/headers), CSRF preserved everywhere else, schema exhaustive, no scope creep, no `any`, tsc + build clean.
+
+---
+
+## Superseded by FE-019 (2026-05-28)
+
+The `/api/match/import` endpoint introduced here was removed in
+[FE-019](FE-019_remove-match-import-endpoint.md). Owner decision:
+the importer was dead code in our actual architecture — `macht-api`
+writes to SQLite directly via `rusqlite`, the HTTP hop was only ever
+intended for a multi-host setup that never materialised. Removing
+reduces attack surface and eliminates the per-framework-upgrade
+maintenance tax.
+
+Companion `XR-001_macht-api-x-api-key-cutover` is closed without
+implementation: nothing to cut over to.
