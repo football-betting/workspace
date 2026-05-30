@@ -27,20 +27,34 @@ PWA, auch wenn die App auf dem Handy wieder in den Vordergrund geholt wird.
 **Nur während Live-Spielen** (kein Live-Spiel → kein Polling, schont
 Ressourcen/Akku).
 
+## Mechanismus: Polling statt WebSocket/SSE
+**Bewusst Polling**, kein WebSocket/SSE. Grund: Die Quelldaten ändern sich nur
+**einmal pro Minute** (macht-api-Cron) → sub-minütliches Push bringt keinen
+Mehrwert. Es gibt keinen WS/SSE-Server; die Rust-APIs sind REST und pushen
+nicht. `router.refresh()` (~60 s) liefert genauso aktuelle Daten, ist simpel,
+robust und PWA-tauglich. WS/SSE wäre unverhältnismäßige Infra ohne Nutzen.
+
 ## Scope
 - **In scope**:
-  - Client-Komponente `LiveRefresher`, die — **nur wenn mindestens ein Spiel
-    Live-Status hat** (`IN_PLAY`/`PAUSED`) — die Server-Daten regelmäßig neu
-    holt: `router.refresh()` (re-rendert die RSC, holt frische `getLiveMatches`
-    + Rating/Punkte). Intervall ~**60 s** (passend zum Minuten-Update der API).
-  - „Hat-Live"-Status kommt **vom Server** (Prop/RSC) — der Client pollt nur,
-    wenn live; sobald kein Spiel mehr live ist, **stoppt** das Polling.
-  - **Wieder-Öffnen/Fokus**: bei `visibilitychange`→sichtbar und `focus`, wenn
-    live, sofort einmal refreshen (deckt „App wieder aufmachen → aktuell" ab).
-  - Auf Dashboard (`/`) und Match-Detail (`/match/[id]`) einsetzen (dort, wo
-    Live-Score/Punkte angezeigt werden).
-- **Out of scope (explicit)**: WebSockets/Server-Sent-Events (Polling reicht);
-  Push-Notifications; Polling bei nicht-live Spielen; Änderung der API/Cron.
+  - Client-Komponente `LiveRefresher`, die die Server-Daten per
+    `router.refresh()` (re-rendert RSC → frische `getLiveMatches` +
+    Rating/Punkte) neu holt, Intervall ~**60 s** (passend zum Minuten-Update).
+  - **Polling-Aktivierung** (Server liefert Live-Status **und** den nächsten
+    Anpfiff-Zeitpunkt):
+    - Mindestens ein Spiel **live** (`IN_PLAY`/`PAUSED`) → alle ~60 s pollen.
+    - Sonst, wenn ein **Anpfiff in der Zukunft** liegt → einen Timer auf
+      `kickoff − jetzt` setzen, der das Polling **zum Anpfiff automatisch
+      startet** (deckt: Tab/App um 15:55 offen, Spiel startet 16:00 → ohne
+      manuelles Neuladen aktualisiert es sich ab 16:00).
+    - Kein Live- und kein anstehendes Spiel → **kein** Polling.
+    - Sobald kein Spiel mehr live ist → Polling **stoppt**.
+  - **Wieder-Öffnen/Fokus**: bei `visibilitychange`→sichtbar und `focus` einmal
+    refreshen und Live/Anpfiff neu bewerten (deckt: App um 16:05 wieder
+    aufmachen → sofort aktuell).
+  - Auf Dashboard (`/`) und Match-Detail (`/match/[id]`) einsetzen.
+- **Out of scope (explicit)**: WebSockets/Server-Sent-Events (s. o.);
+  Push-Notifications; Dauer-Polling bei nicht-live/nicht-anstehenden Spielen;
+  Änderung der API/Cron.
 
 ## Wechselwirkung mit FE-045 (PWA)
 Der Auto-Refresh muss **frische** Daten bekommen — passt zu FE-045
@@ -57,8 +71,11 @@ bedienen.
 ## Acceptance Criteria
 - [ ] Bei mindestens einem Live-Spiel aktualisiert sich Dashboard/Match-Detail
       **automatisch** (~60 s) — Score und Ranglisten-Punkte ohne manuellen Reload.
-- [ ] Kein Live-Spiel → **kein** Polling (Intervall gestoppt).
-- [ ] App wieder in den Vordergrund/Fokus → bei Live sofort aktualisiert.
+- [ ] Kein Live- **und** kein anstehendes Spiel → **kein** Polling.
+- [ ] **Kickoff-Übergang**: Tab um 15:55 offen, Spiel startet 16:00 → ab ~16:00
+      aktualisiert es sich **ohne** manuelles Neuladen (Timer auf den Anpfiff).
+- [ ] App wieder in den Vordergrund/Fokus → sofort refreshed + Live/Anpfiff neu
+      bewertet (Szenario: um 16:05 wieder geöffnet → aktuell).
 - [ ] Funktioniert im Browser und in der installierten PWA.
 - [ ] Kein Memory-Leak (Interval/Listener werden sauber aufgeräumt).
 - [ ] Quality Gate: `bash scripts/check.sh`.
