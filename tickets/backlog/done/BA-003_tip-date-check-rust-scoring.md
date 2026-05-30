@@ -98,7 +98,7 @@ Recommend Option A as the first cut. Option B can land later if a
       (24 / 13 / 12 / 9 / 7 / 5 / 4 / 0 — the 8 seeded users) when
       `/rating` is called against `shared/db/database.db`
 - [ ] Manual test: insert a late tip directly (`INSERT INTO tip
-      (userId, matchId, scoreHome, scoreAway, date) VALUES (6, 1, 2, 0,
+      (user_id, match_id, score_home, score_away, date) VALUES (6, 1, 2, 0,
       <some-timestamp-after-match-1-utcDate>)`) — `/rating` for user 6
       reflects no point change from this row
 - [ ] `cargo clippy -- -D warnings` clean
@@ -108,6 +108,6 @@ Recommend Option A as the first cut. Option B can land later if a
 
 1. `cargo test` and confirm existing tests pass
 2. Start `betting-api`, hit `/rating`, record TestUser's score
-3. `sqlite3 shared/db/database.db "INSERT INTO tip (userId, matchId, scoreHome, scoreAway, date) VALUES (6, 1, 2, 0, strftime('%s', 'now'));"` (this is a +4 exact tip for a past match)
+3. `sqlite3 shared/db/database.db "INSERT INTO tip (user_id, match_id, score_home, score_away, date) VALUES (6, 1, 2, 0, strftime('%s', 'now'));"` (a post-kickoff tip on a past match)
 4. Hit `/rating` again — TestUser's score must be unchanged
 5. `sqlite3 shared/db/database.db "DELETE FROM tip WHERE id = (SELECT MAX(id) FROM tip);"` (clean up)
