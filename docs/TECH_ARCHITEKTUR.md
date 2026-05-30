@@ -82,15 +82,15 @@ betting-api/src/
 ### Scoring-Logik (`service/mod.rs`)
 
 ```rust
-WIN_EXACT      = 4   // exakte Vorhersage
-WIN_SCORE_DIFF = 2   // korrekte Tordifferenz, falsches Ergebnis
-WIN_TEAM       = 1   // korrekter Sieger / korrektes Unentschieden
+WIN_EXACT      = 5   // exakte Vorhersage
+WIN_SCORE_DIFF = 3   // korrekte Tordifferenz, kein Unentschieden, falsches Ergebnis
+WIN_TEAM       = 2   // korrekter Sieger / korrektes Unentschieden
 NO_WIN_TEAM    = 0
 ```
 
 **Extra-Punkte** (hardcoded auf EM2024, `"ESP"` als Sieger):
-- `user.winner == "ESP"`      → `+15`
-- `user.secret_winner == "ESP"` → `+7` (überschreibt 15!)
+- `user.winner == "ESP"`      → `+12`
+- `user.secret_winner == "ESP"` → `+6` (überschreibt 12!)
 
 **Positionsberechnung** (`calculate_positions`): Stable Tie-Ranking — gleiche `score_sum` ⇒ gleiche Position, danach Sprung (1,1,3,3,5,…).
 `clear_tips=true` für Listen-Endpoints (Tipps werden vor Serialisierung geleert).

@@ -302,18 +302,18 @@ macht-api (Rust, cron) ──► externe API ──► SQLite match-Tabelle
 ### 8.3 Live-Match-Punkte auf Dashboard
 - `getLiveMatch()` (DB-direkt) → alle Matches mit `status='IN_PLAY'`
 - Anschließend: `fetchApi('user/{id}')` (Rust-API) → User-Objekt mit `tips[]` (jeder Tip enthält bereits berechneten `score`)
-- Filter Tips wo `match_id ∈ liveMatchIds` → zeigt User seine aktuellen Punkte (4 grün, 2 gelb, 0 rot, sonst neutral) **live**.
+- Filter Tips wo `match_id ∈ liveMatchIds` → zeigt User seine aktuellen Punkte (5 grün, 3 gelb, 0 rot, sonst neutral) **live**.
 
 ### 8.4 Punkte-Farben (überall konsistent)
-- **4 Punkte (exakt)** → grün (`text-green-500`)
-- **2 Punkte (Tordifferenz)** → gelb (`text-yellow-300`)
-- **1 Punkt (Siegrichtung)** → kein speziell genannt — fällt in den "neutralen" Fall
+- **5 Punkte (exakt)** → grün (`text-green-500`)
+- **3 Punkte (Tordifferenz, kein Unentschieden)** → gelb (`text-yellow-300`)
+- **2 Punkte (Siegrichtung / korrektes Unentschieden)** → kein speziell genannt — fällt in den "neutralen" Fall
 - **0 Punkte** → rot (`text-red-500`)
 
 Im Neubau in `lib/scoring.ts` zentralisieren:
 ```ts
 export const scoreColor = (n: number) =>
-  n === 4 ? 'success' : n === 2 ? 'warning' : n === 0 ? 'danger' : 'muted';
+  n === 5 ? 'success' : n === 3 ? 'warning' : n === 0 ? 'danger' : 'muted';
 ```
 
 ### 8.5 Username-Truncation
@@ -899,32 +899,32 @@ const TEAM = {
 **Ziel**: Nach dem Seed zeigt das Dashboard für jeden User unterschiedliche Punkte, alle 4 Punkte-Farben sind sichtbar, das Ranking hat keine Gleichstände (sonst sieht man Tie-Logik nicht).
 
 **Scoring zur Erinnerung** (aus Rust `betting-api/src/service/mod.rs`):
-- 4 Punkte = exakt (z.B. 2:0 getippt, 2:0 gespielt)
-- 2 Punkte = Tordifferenz korrekt, Ergebnis falsch (3:1 getippt, 2:0 gespielt)
-- 1 Punkt = Sieger korrekt **ODER** Unentschieden korrekt (aber andere Tordifferenz)
+- 5 Punkte = exakt (z.B. 2:0 getippt, 2:0 gespielt)
+- 3 Punkte = Tordifferenz korrekt, kein Unentschieden, Ergebnis falsch (3:1 getippt, 2:0 gespielt)
+- 2 Punkte = Sieger korrekt **ODER** Unentschieden korrekt (aber andere Tordifferenz)
 - 0 Punkte = alles falsch
-- +15 wenn `user.winner === 'ESP'` (Turnier-Sieger hardcoded), +7 wenn `user.secretWinner === 'ESP'`
+- +12 wenn `user.winner === 'ESP'` (Turnier-Sieger hardcoded), +6 wenn `user.secretWinner === 'ESP'`
 
 **Tipp-Matrix** (4 vergangene + 2 Live-Matches = 6 mit Score; SCHEDULED-Matches → Tipps optional):
 
 | User           | M1 (GER:ESP 2:0) | M2 (POL:FRA 1:1) | M3 (ENG:NED 0:2) | M4 (ITA:HRV 3:2) | M5 (live FRA:DEU 1:1) | M6 (live POR:ENG 0:0) | M7 (zukunft, getippt) |
 |----------------|------------------|------------------|------------------|------------------|------------------------|------------------------|------------------------|
-| AdaLovelace    | 2:0 → **4**      | 1:1 → **4**      | 0:2 → **4**      | 3:2 → **4**      | 1:1 → **4**            | 0:0 → **4**            | 2:1 ESP:ITA           |
-| AlanTuring     | 3:1 → **2**      | 0:0 → **1**      | 1:3 → **2**      | 2:1 → **2**      | 2:2 → **1**            | 1:1 → **1**            | (kein Tipp)           |
-| MarieCurie     | 1:0 → **1**      | 2:2 → **1**      | 0:1 → **1**      | 1:0 → **1**      | (kein Tipp)            | (kein Tipp)            | 0:1                   |
+| AdaLovelace    | 2:0 → **5**      | 1:1 → **5**      | 0:2 → **5**      | 3:2 → **5**      | 1:1 → **5**            | 0:0 → **5**            | 2:1 ESP:ITA           |
+| AlanTuring     | 3:1 → **3**      | 0:0 → **2**      | 1:3 → **3**      | 2:1 → **3**      | 2:2 → **2**            | 1:1 → **2**            | (kein Tipp)           |
+| MarieCurie     | 1:0 → **2**      | 2:2 → **2**      | 0:1 → **2**      | 1:0 → **2**      | (kein Tipp)            | (kein Tipp)            | 0:1                   |
 | NikolaTesla    | 0:2 → **0**      | (kein Tipp)      | 2:0 → **0**      | 0:3 → **0**      | 0:2 → **0**            | 3:0 → **0**            | 1:2                   |
-| RosaParks      | 2:0 → **4**      | 0:1 → **0**      | 1:2 → **2**      | 2:2 → **1**      | 1:0 → **0**            | (kein Tipp)            | 0:0                   |
-| **TestUser**   | 1:1 → **0**      | 2:2 → **1**      | 0:2 → **4**      | 3:3 → **1**      | 0:0 → **1**            | 1:0 → **0**            | 2:0                   |
-| AlbertEinstein | 3:0 → **2**      | 1:1 → **4**      | 1:1 → **1**      | (kein Tipp)      | 1:1 → **4**            | 0:0 → **4**            | (kein Tipp)           |
-| IsaacNewton    | (kein Tipp)      | 1:0 → **0**      | 2:1 → **0**      | 4:3 → **2**      | 2:1 → **0**            | 2:2 → **1**            | 1:1                   |
+| RosaParks      | 2:0 → **5**      | 0:1 → **0**      | 1:2 → **3**      | 2:2 → **2**      | 1:0 → **0**            | (kein Tipp)            | 0:0                   |
+| **TestUser**   | 1:1 → **0**      | 2:2 → **2**      | 0:2 → **5**      | 3:3 → **2**      | 0:0 → **2**            | 1:0 → **0**            | 2:0                   |
+| AlbertEinstein | 3:0 → **3**      | 1:1 → **5**      | 1:1 → **2**      | (kein Tipp)      | 1:1 → **5**            | 0:0 → **5**            | (kein Tipp)           |
+| IsaacNewton    | (kein Tipp)      | 1:0 → **0**      | 2:1 → **0**      | 4:3 → **3**      | 2:1 → **0**            | 2:2 → **2**            | 1:1                   |
 
 **Erwartetes Ranking nach Seed (Match-Punkte, ohne Extra-Punkte für Winner='ESP')**:
-1. AdaLovelace — 24 P (alle 6 exakt, +0 weil ESP nur secretWinner: +7 = **31 P**)
-2. AlbertEinstein — 13 P (+0 ESP-Extra)
-3. AlanTuring — 9 P
-4. RosaParks — 7 P (winner ESP! → **+15 = 22 P**)
-5. TestUser — 7 P
-6. IsaacNewton — 3 P
+1. AdaLovelace — 30 P (alle 6 exakt, +0 weil ESP nur secretWinner: +6 = **36 P**)
+2. AlbertEinstein — 20 P (+0 ESP-Extra)
+3. AlanTuring — 15 P
+4. RosaParks — 10 P (winner ESP! → **+12 = 22 P**)
+5. TestUser — 11 P
+6. IsaacNewton — 5 P
 7. MarieCurie — 4 P
 8. NikolaTesla — 0 P
 
