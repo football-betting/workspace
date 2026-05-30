@@ -35,8 +35,9 @@ aufsetzen kann (Manifest + passende Icon-Größen, inkl. Apple-Touch-Icon).
     `purpose: "maskable"`** (PWA-Installierbarkeit Android/Apple).
   - Benötigte Icon-Größen aus der Quelle erzeugen (z. B. mit `sharp`, schon
     installiert) und unter `public/icon/` ablegen.
-  - Das Icon `public/icon/icon.png` wird in diesem Ticket **committet**
-    (Feature-Asset).
+  - Das Quell-Icon `public/icon/icon.png` ist bereits auf `main` (kam
+    versehentlich mit FE-031 mit) — FE-043 erzeugt nur die abgeleiteten
+    Größen/Manifest, fügt die Quelle nicht erneut hinzu.
 - **Out of scope (explicit)**: Vollständige PWA (Service-Worker, Offline,
   Install-Prompt) — nur die Icon-/Manifest-Grundlage; Splash-Screens.
 
