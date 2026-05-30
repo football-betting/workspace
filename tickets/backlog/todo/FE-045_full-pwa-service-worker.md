@@ -24,6 +24,13 @@ App eine **echte PWA** werden: per Service-Worker installierbar (Android/iOS),
 mit Caching und Offline-Fallback. Stale-Content-Risiko beachten (SW-Caching
 darf keine veralteten Daten/Builds festhalten).
 
+## Integritätsregel (hart)
+**Tipps dürfen ausschließlich online abgegeben werden.** Niemals offline
+queuen oder per Background-Sync später senden — sonst könnte ein offline
+abgegebener Tipp **nach Spielbeginn/-ende** beim Server ankommen
+(Cheating/Integritätsproblem). Offline → Tipp-Abgabe klar blockieren, nicht
+puffern.
+
 ## Scope
 - **In scope**:
   - Service-Worker-Setup für den **Next.js App Router** über eine gepflegte
@@ -55,6 +62,9 @@ darf keine veralteten Daten/Builds festhalten).
       Browser-Fehlerseite.
 - [ ] Daten-Requests werden **nicht** dauerhaft veraltet gecacht (frische
       Spiel-/Tippdaten bei Verbindung).
+- [ ] **Tipp-Abgabe offline blockiert** (klare Meldung „nur online möglich"),
+      **nicht** gequeued; kein Background-Sync für Tipps. Tipp-POST
+      (`/api/tip/...`) wird **nie** vom SW gecacht/abgefangen.
 - [ ] SW in Dev inaktiv; `pnpm dev` ohne Caching-Probleme.
 - [ ] Quality Gate: `bash scripts/check.sh --build`.
 
