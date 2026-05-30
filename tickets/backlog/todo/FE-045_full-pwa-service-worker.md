@@ -36,15 +36,34 @@ puffern.
   - Service-Worker-Setup für den **Next.js App Router** über eine gepflegte
     Library (z. B. **Serwist `@serwist/next`** als moderner Nachfolger von
     next-pwa) — **aktuelle Setup-Schritte via Context7 prüfen**, nicht raten.
-  - **Precache** der statischen Assets / App-Shell; **Runtime-Caching**:
-    statisch → cache-first, dynamische/Daten-Requests (Rust-API, Tipps) →
-    network-first oder stale-while-revalidate, sodass keine veralteten
-    Spiel-/Tippdaten hängen bleiben.
-  - **Offline-Fallback** (einfache Offline-Seite, wenn keine Verbindung).
-  - **Installierbarkeit**: erfüllt PWA-Install-Kriterien (Manifest aus FE-043 +
-    SW + Secure-Context). Optionaler In-App-Install-Button via
-    `beforeinstallprompt`.
-  - SW **in Dev deaktiviert** (kein Caching beim Entwickeln).
+  - **Precache** der statischen Assets/App-Shell (`self.__SW_MANIFEST`,
+    `cleanupOutdatedCaches: true`).
+  - **Runtime-Caching korrekt einordnen** — der SW sieht nur **Browser**-
+    Requests (Navigationen, RSC-Payloads, statische Assets, browser-seitige
+    `/api/*`-Routes), **nicht** die serverseitigen Rust-API-Calls (die laufen
+    Server→Server im RSC-Render, für den SW unsichtbar):
+    - Navigationen → **`NetworkFirst`** (kein cache-first für HTML — sonst
+      veraltete/fremde Inhalte). Statische Assets (`_next/static`, Fonts,
+      Icons) → `CacheFirst`/SWR.
+    - **Nur GET** cachen. **Alle Nicht-GET** (POST/PUT/DELETE — Login, Tipp,
+      Winner, Avatar …) → **NetworkOnly**, nie abgefangen/gequeued.
+    - **Authentifizierte/personalisierte** Antworten **nicht** persistent
+      cachen (kein Cross-User-/Stale-Leak); browser-seitige `/api/*`-Routes per
+      denylist von Navigation/Cache ausnehmen.
+  - **Offline-Fallback** über `precacheOptions.navigateFallback` (precachte
+    Offline-Seite) — nur für fehlgeschlagene **Navigationen**, nicht für Assets.
+  - **SW-Update-Flow**: `skipWaiting` + `clientsClaim` + `cleanupOutdatedCaches`,
+    damit ein neuer Build aktiv wird (keine festhängende veraltete App);
+    bei Bedarf „neue Version – neu laden"-Hinweis.
+  - **Installierbarkeit**: PWA-Kriterien erfüllt (Manifest FE-043 + SW +
+    Secure-Context). Optionaler Install-Button via `beforeinstallprompt`.
+  - **iOS/Theme**: `appleWebApp`-Metadata (standalone, Status-Bar, Title) und
+    `themeColor` über Next-`metadata` setzen.
+  - **Maskable-Icon prüfen**: FE-043 nutzt fürs `maskable`-Icon dasselbe
+    full-bleed 512er → wird vom OS-Maskenrand evtl. **beschnitten**. Entweder
+    maskable-Variante mit Safe-Zone-Padding erzeugen oder `purpose: "maskable"`
+    entfernen, wenn full-bleed.
+  - SW **in Dev deaktiviert** (`disableDevLogs`, SW aus bei `pnpm dev`).
 - **Out of scope (explicit)**: Push-Notifications; Background-Sync; vollständige
   Offline-Funktionalität (Tippen ohne Netz); App-Store-Veröffentlichung.
 
@@ -62,6 +81,15 @@ puffern.
       Browser-Fehlerseite.
 - [ ] Daten-Requests werden **nicht** dauerhaft veraltet gecacht (frische
       Spiel-/Tippdaten bei Verbindung).
+- [ ] Navigationen sind **network-first**; offline → precachte Offline-Seite
+      (nicht für Assets).
+- [ ] **Kein Nicht-GET** wird gecacht/gequeued (Login/Tipp/Winner/Avatar bleiben
+      network-only); keine authentifizierten/personalisierten Antworten
+      persistent gecacht.
+- [ ] Neuer Deploy → nach Reload neue App (kein festhängender veralteter Shell).
+- [ ] iOS-Standalone-Meta (`appleWebApp`) + `themeColor` gesetzt.
+- [ ] Maskable-Icon ohne Beschneidung (Safe-Zone) — oder `maskable` entfernt.
+- [ ] Lighthouse → „Installable"/PWA-Checks grün.
 - [ ] **Tipp-Abgabe offline blockiert** (klare Meldung „nur online möglich"),
       **nicht** gequeued; kein Background-Sync für Tipps. Tipp-POST
       (`/api/tip/...`) wird **nie** vom SW gecacht/abgefangen.
