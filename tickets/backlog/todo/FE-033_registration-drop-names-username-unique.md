@@ -40,7 +40,10 @@ Kein Punkt im Local-Part → ein Wort. Reine Funktion → unit-testbar.
     Username → Fehler (Unique greift); kleiner Hinweis am Username-Feld
     „Das ist nicht deine Email-Adresse".
   - `lib/auth.ts` (`getUserAttributes`): firstName/lastName entfernen.
-  - `scripts/demo_data.ts`: Seed ohne firstName/lastName, Usernames eindeutig.
+  - `scripts/demo_data.ts`: Seed ohne firstName/lastName, Usernames eindeutig,
+    **Emails im Format `vorname.nachname@local.dev`** (z. B.
+    `rosa.parks@local.dev`), damit `displayNameFromEmail` echte Namen liefert
+    (gebraucht von FE-031 und FE-036).
   - Helper `displayNameFromEmail(email)` (s. o.) und überall dort verwenden, wo
     bisher firstName/lastName **angezeigt** wurden (falls vorhanden).
 - **Out of scope (explicit)**: Migration (DB wird neu erzeugt); Email- oder

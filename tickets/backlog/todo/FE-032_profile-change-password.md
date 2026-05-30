@@ -1,4 +1,4 @@
-# FE-032 Profil (eigenes): Passwort ändern
+# FE-032 „Profile Settings"-Seite (/settings): Passwort, Logout, Avatar
 
 ## Repo
 frontend
@@ -19,37 +19,47 @@ todo
 implementer
 
 ## Background
-Auf dem **eigenen** Profil soll der Nutzer sein Passwort ändern können. Andere
-Profile bieten diese Möglichkeit nicht.
+Es soll eine eigene Settings-Seite geben (Design: `design/account.html`, h1
+„Profile Settings"), erreichbar nur für den eigenen Account. Sie bündelt:
+Avatar, Passwort ändern und **Logout** — Letzteres besonders, weil die
+Mobile-Navigation aktuell **keinen** Logout-Eintrag hat. Route: **/settings**.
 
 ## Scope
 - **In scope**:
-  - Passwort-ändern-Formular nur auf dem eigenen Profil (aktuelles Passwort,
-    neues Passwort, Wiederholung).
-  - Server-Endpoint, der die Session prüft (userId nur aus der Session, nie aus
-    Body/URL — IDOR-sicher), das aktuelle Passwort per Argon2id verifiziert,
-    die Passwort-Regeln (min. 8 Zeichen) anwendet und das neue Passwort
-    hasht/speichert. Rate-Limit wie bei anderen Auth-Routen.
-- **Out of scope (explicit)**: Passwort-vergessen/Reset per Email;
-  Email-Änderung; Username-Änderung.
+  - Neue, session-geschützte Route `app/(app)/settings/page.tsx`
+    (eigener Account; Layout-Guard wie andere `(app)`-Seiten).
+  - **Identity**: Avatar-Anzeige + „Foto hochladen"-Button (Funktionalität
+    liefert FE-036; hier nur die UI/Einbindung), Username + Email (read-only,
+    eigener Account — Email hier OK).
+  - **Security**: Passwort-ändern-Formular (aktuelles / neues / Wiederholung).
+    Server-Endpoint: Session prüfen (userId **nur** aus Session, IDOR-sicher),
+    aktuelles Passwort per Argon2id verifizieren, Regeln (min. 8 Zeichen),
+    neues Passwort hashen/speichern, Rate-Limit wie andere Auth-Routen.
+  - **Session**: Logout-Button, der auch auf Mobile funktioniert.
+  - Zugang von Profil/Nav zur Settings-Seite.
+- **Out of scope (explicit)**: Avatar-Upload-Funktionalität selbst (FE-036);
+  2FA aus dem Design; Email-/Username-Änderung; Passwort-Reset per Email.
 
 ## References
+- `frontend/design/account.html` — Design-Vorlage
 - `frontend/app/api/auth/login/route.ts` — Argon2id-Konfiguration als Vorlage
+- `frontend/app/api/auth/logout/route.ts` — Logout
 - `frontend/lib/validation/auth.ts` — Passwort-Regeln
-- `frontend/lib/rate-limit.ts` — Rate-Limiting
-- `frontend/lib/user.ts` — User-Lese/Schreib-Helfer
-- `frontend/app/(app)/user/[id]/page.tsx` — `isOwnProfile`
+- `frontend/lib/rate-limit.ts`, `frontend/lib/user.ts`
+- `frontend/components/dashboard/BottomNav.tsx` — Mobile-Nav (kein Logout)
 
 ## Acceptance Criteria
-- [ ] Eigenes Profil zeigt „Passwort ändern"; fremde Profile nicht.
-- [ ] Falsches aktuelles Passwort → Fehler, kein Update.
-- [ ] Neues Passwort < 8 Zeichen oder Wiederholung ≠ → Fehler, kein Update.
-- [ ] Erfolgreicher Wechsel → neues Passwort gilt beim nächsten Login; userId
-      stammt ausschließlich aus der Session.
-- [ ] Tests: Validierung/Logik des Endpoints (Unit), wo testbar.
+- [ ] `/settings` nur eingeloggt erreichbar (sonst Redirect `/login`).
+- [ ] Passwort ändern: falsches altes PW → Fehler; neues < 8 Zeichen oder
+      Wiederholung ≠ → Fehler; Erfolg → neues PW gilt beim nächsten Login;
+      userId nur aus Session.
+- [ ] Logout-Button funktioniert (auch auf Mobile erreichbar/sichtbar).
+- [ ] Avatar-Bereich mit Upload-Button vorhanden (verdrahtet mit FE-036).
+- [ ] 2FA wird **nicht** implementiert.
+- [ ] Tests: Endpoint-Validierung/-Logik (Unit), wo testbar.
 - [ ] Quality Gate: `pnpm exec tsc --noEmit && pnpm exec vitest run`.
 
 ## Verification (manual)
-1. Eigenes Profil → Passwort ändern mit korrektem alten PW → Erfolg, Re-Login
-   mit neuem PW klappt.
-2. Falsches altes PW → Fehler. Zu kurzes neues PW → Fehler.
+1. `/settings` ausgeloggt → `/login`.
+2. Eingeloggt → Passwort ändern (korrekt/falsch/zu kurz) verhält sich korrekt.
+3. Logout-Button → ausgeloggt; auf Mobile sichtbar/erreichbar.

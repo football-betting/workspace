@@ -1,4 +1,4 @@
-# FE-031 Profil: Email + Username anzeigen, Pick-Deadline-Hinweis
+# FE-031 Profil als „My Stats": Username + Name aus Email, Winner-Flagge fix
 
 ## Repo
 frontend
@@ -19,37 +19,46 @@ todo
 implementer
 
 ## Background
-Das Profil soll den **Username** und die **Email** anzeigen. Die Email ist
-PII und wird nur auf dem **eigenen** Profil gezeigt, nicht beim Ansehen
-fremder Profile (`/user/{andere-id}`). Außerdem soll ein kurzer Hinweis
-erklären, dass Weltmeister-/Secret-Tipp nur bis zum ersten Spiel editierbar
-sind (die Edit-Logik existiert bereits aus FE-018).
+Das Profil (`/user/{id}`) soll sich an `design/profile.html` orientieren („My
+Stats"): oben **Username** und der aus der Email **abgeleitete Name**
+(Vor-/Nachname) — **keine** Email-Adresse (die ist PII und steht nur auf der
+Settings-Seite, FE-032). Zusätzlich sind die Flaggen in den Winner-/
+Secret-Winner-Karten aktuell standardmäßig entsättigt und werden nur beim
+Hover farbig (`grayscale group-hover:grayscale-0`) — das soll weg: **immer
+richtige Farben, kein Hover-Effekt**.
 
 ## Scope
 - **In scope**:
-  - Profil zeigt Username (bereits) + Email.
-  - Email nur sichtbar, wenn `isOwnProfile` (Session-User == Profil-User).
-  - Hinweistext an den Winner-Cards: „Editierbar bis zum ersten Spiel"
-    (nur sinnvoll im editierbaren/eigenen, ungesperrten Zustand).
-- **Out of scope (explicit)**: Winner-Edit-Logik (FE-018, fertig);
-  Passwort-Änderung (FE-032); Registrierung/Schema (FE-033).
+  - Profil zeigt **Username** + **abgeleiteten Anzeigenamen** aus der Email
+    (`displayNameFromEmail`, kommt aus FE-033). **Keine** Email auf dem Profil.
+  - Layout/Anmutung an `design/profile.html` anlehnen (Stats, Winner-Karten,
+    Prediction History bleiben).
+  - `WinnerCards`: `grayscale group-hover:grayscale-0 transition-all
+    duration-500` an der `Flag` entfernen → Flagge immer farbig, kein Hover.
+  - Pick-Deadline-Hinweis an den Winner-Karten („editierbar bis zum ersten
+    Spiel") beibehalten/ergänzen (klein, sekundär).
+- **Out of scope (explicit)**: Settings/Avatar/Passwort (FE-032, FE-036);
+  Schema/Registrierung (FE-033); Winner-Edit-Logik (FE-018, fertig).
+
+## Dependencies
+- **FE-033** liefert `displayNameFromEmail` und die Demo-Emails
+  (`vorname.nachname@local.dev`) — ohne die ist der abgeleitete Name leer.
 
 ## References
-- `frontend/app/(app)/user/[id]/page.tsx` — `isOwnProfile`, `editable`,
-  `localUser`, `locked`
-- `frontend/components/profile/ProfileHeader.tsx` — Username-Anzeige
-- `frontend/components/profile/WinnerCards.tsx` — Ort für den Hinweis
-- `frontend/lib/user.ts` — `getUserById` (liefert `email`)
+- `frontend/design/profile.html` — Design-Vorlage
+- `frontend/app/(app)/user/[id]/page.tsx` — Profil-Seite, `localUser`
+- `frontend/components/profile/ProfileHeader.tsx` — Name/Username-Anzeige
+- `frontend/components/profile/WinnerCards.tsx` — `Flag`-`grayscale`-Hover (Z. ~38)
+- `frontend/lib/...` — `displayNameFromEmail` (FE-033)
 
 ## Acceptance Criteria
-- [ ] Eigenes Profil: Username **und** Email sichtbar.
-- [ ] Fremdes Profil: Username sichtbar, Email **nicht**.
-- [ ] Hinweis „bis zum ersten Spiel editierbar" erscheint am Winner-Bereich im
-      editierbaren Zustand; im gesperrten Zustand nicht (oder als „gesperrt").
-- [ ] Tests: wo testbare Logik entsteht (z. B. Email-Sichtbarkeits-Helper),
-      Unit-Test ergänzen. Reine RSC-Anzeige ohne testbare Logik ausgenommen.
+- [ ] Profil zeigt Username + abgeleiteten Namen (Vor-/Nachname); **keine** Email.
+- [ ] Winner- und Secret-Winner-Flagge sind immer farbig (kein `grayscale`,
+      kein Hover-Wechsel).
+- [ ] Pick-Deadline-Hinweis am Winner-Bereich im editierbaren Zustand sichtbar.
+- [ ] Tests: wo testbare Logik entsteht. Reine RSC-Anzeige ausgenommen.
 - [ ] Quality Gate: `pnpm exec tsc --noEmit && pnpm exec vitest run`.
 
 ## Verification (manual)
-1. Eigenes Profil → Email + Username sichtbar, Pick-Hinweis am Winner-Bereich.
-2. Fremdes Profil (`/user/<andere-id>`) → keine Email.
+1. Profil öffnen → Username + Name (aus Email) sichtbar, keine Email.
+2. Winner-/Secret-Flaggen sofort farbig, kein dunkler/Hover-Effekt.
