@@ -48,7 +48,8 @@ Spiele gibt, zunächst nur die **ersten 20** zeigen, plus zwei Buttons:
   `lib/match.ts` (`groupByDate`), `app/(app)/page.tsx`
 
 ## Acceptance Criteria
-- [ ] ≤ 30 Upcoming → unverändert alle sichtbar, keine Buttons.
+- [ ] ≤ 30 Upcoming → unverändert **alle** sichtbar, keine Buttons (z. B. 29
+      oder 30 Spiele → alle sichtbar). Erst ab **31** wird begrenzt.
 - [ ] > 30 → initial 20 sichtbar; „Nächste 10 laden" erhöht um 10; „Alle laden"
       zeigt alle. Buttons verschwinden, wenn alles sichtbar.
 - [ ] „Alle laden" erscheint nur, wenn > 10 weitere Spiele versteckt sind
