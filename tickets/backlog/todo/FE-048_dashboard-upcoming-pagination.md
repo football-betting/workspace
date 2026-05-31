@@ -30,7 +30,12 @@ Spiele gibt, zunächst nur die **ersten 20** zeigen, plus zwei Buttons:
     Gesamtzahl der Upcoming-Spiele **≤ 30** → alle zeigen wie bisher. Wenn
     **> 30** → initial **20** zeigen, darunter zwei Buttons:
     - **„Nächste 10 laden"** → +10 sichtbar (mehrfach, bis alle).
-    - **„Alle laden"** → alle sichtbar.
+    - **„Alle laden"** → alle sichtbar. **Nur anzeigen, wenn „Nächste 10"
+      mindestens zweimal nötig wäre** — d. h. wenn aktuell **mehr als 10**
+      weitere Spiele versteckt sind (versteckt − sichtbar > 10). Bleibt nur
+      **ein** „Nächste 10"-Klick übrig (≤ 10 Rest), wird **kein** „Alle laden"
+      gezeigt (überflüssig). Mit jedem „Nächste 10"-Klick neu auswerten —
+      sobald nur noch ≤ 10 Rest bleiben, verschwindet „Alle laden".
   - Reihenfolge bleibt wie bisher (nach Tag/Anpfiff sortiert); die Tag-
     Gruppierung (FE-024) muss mit der schrittweisen Anzeige konsistent bleiben.
   - Daten kommen weiter komplett vom Server (RSC); nur die **Anzeige** wird
@@ -46,6 +51,10 @@ Spiele gibt, zunächst nur die **ersten 20** zeigen, plus zwei Buttons:
 - [ ] ≤ 30 Upcoming → unverändert alle sichtbar, keine Buttons.
 - [ ] > 30 → initial 20 sichtbar; „Nächste 10 laden" erhöht um 10; „Alle laden"
       zeigt alle. Buttons verschwinden, wenn alles sichtbar.
+- [ ] „Alle laden" erscheint nur, wenn > 10 weitere Spiele versteckt sind
+      (≥ 2 „Nächste 10"-Klicks nötig); bei ≤ 10 Rest nur „Nächste 10".
+      Beispiel: 31 Spiele → 20 sichtbar, 11 Rest → beide Buttons; nach einem
+      „Nächste 10" → 30 sichtbar, 1 Rest → nur „Nächste 10".
 - [ ] Tag-Gruppierung bleibt korrekt; getippte Spiele bleiben editierbar.
 - [ ] Quality Gate: `bash scripts/check.sh`.
 
