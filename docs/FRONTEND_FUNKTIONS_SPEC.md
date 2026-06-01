@@ -44,7 +44,7 @@ user {
   firstName     string
   lastName      string
   username      string  // wird im Ranking gezeigt
-  department    string  // 'Maintz' | 'Mannheim' | 'Langenfeld'   ⚠️ 'Maintz' ist Tippfehler in DB!
+  department    string  // 'Mainz' | 'Mannheim' | 'Langenfeld'   (FE-057: 'Maintz'-Tippfehler korrigiert → 'Mainz')
   winner        string  // ISO3-Code z.B. 'DEU', 'ESP'
   secretWinner  string  // ISO3-Code, ≠ winner (im Signup gecheckt)
 }
@@ -71,7 +71,7 @@ tip {
 - **`match.homeTeam` / `awayTeam` sind JSON-Objekte** mit mindestens `{name, tla}`. Das Rust-Backend (`betting-api`) deserialisiert das.
 - **`tla` ist ISO3 — aber gemischt**: in der DB / im API-JSON erscheinen sowohl FIFA-Codes (`GER`, `NED`, `CRO`, `SUI`) wie auch ISO3 (`DEU`, `NLD`, `HRV`, `CHE`). Im Frontend gibt es eine `countryMapping`-Tabelle in `Flag.astro` zum Übersetzen → muss übernommen werden, sonst gibt's keine Flaggen.
 - **`utcDate` ist `int (unix-timestamp)`** in der DB, das Frontend wandelt via `new Date(int * ...)`. Drizzle `mode: 'timestamp'` macht das automatisch.
-- **`department`-Tippfehler `'Maintz'`** ist live — Frontend mapped beim Anzeigen auf `'Mainz'` (`user/[id].astro:28`, `lib/api.ts:21`). Beim Neubau: entweder migrieren und fixen, oder Mapping beibehalten.
+- **`department`-Tippfehler `'Maintz'`** wurde korrigiert (FE-057): Wert ist jetzt `'Mainz'` (Seed + `DEPARTMENTS`), das Anzeige-Mapping (`displayDepartment`) ist Pass-through. Laufende DB dafür neu seeden.
 
 ---
 
