@@ -15,7 +15,7 @@ medium
 > Folge-Ticket aus FE-059 (User wählte „Email zuerst"). Zweiter Kanal.
 
 ## Status
-todo
+review
 
 ## Owner
 implementer
