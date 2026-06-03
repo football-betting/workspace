@@ -108,9 +108,13 @@ curl -s http://127.0.0.1:8080/        # {"status":"works"}
 cd /opt/football-betting/frontend
 pnpm install --frozen-lockfile
 pnpm build                            # next build --webpack
-pm2 start pnpm --name wm-frontend --cwd /opt/football-betting/frontend -- start
+pm2 start /opt/football-betting/deploy/pm2/ecosystem.config.cjs
 pm2 save && pm2 startup systemd       # survive reboot
 ```
+
+Process config: `deploy/pm2/ecosystem.config.cjs`. Logs: `pm2 logs wm-frontend`
+or `/root/.pm2/logs/wm-frontend-{out,error}.log`. Redeploy:
+`git pull && pnpm build && pm2 restart wm-frontend`.
 
 ## 7. nginx + Cloudflare
 
