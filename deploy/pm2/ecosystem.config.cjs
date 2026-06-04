@@ -17,7 +17,9 @@ module.exports = {
       name: "wm-frontend",
       cwd: "/opt/football-betting/frontend",
       script: "pnpm",
-      args: "start",
+      // Bind to loopback only — nginx proxies to 127.0.0.1:3000, so the app is
+      // never reachable on the public IP:3000 (which would bypass Cloudflare).
+      args: "start -- -H 127.0.0.1",
       autorestart: true,
       max_memory_restart: "600M",
     },

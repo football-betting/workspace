@@ -18,3 +18,6 @@ shared/
 
 # Local Claude settings (the .example is committed)
 .claude/settings.local.json
+
+# Server DB backups (never committed)
+/backups/

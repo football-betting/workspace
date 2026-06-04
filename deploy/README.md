@@ -154,3 +154,21 @@ Cloudflare's trusted edge certificate regardless.
   `UMask=0002` so the WAL `-wal`/`-shm` files stay group-writable (currently
   everything runs as `root`, which is fine only because there is a single user).
 - Restrict origin `:80/:443` to Cloudflare IP ranges via `ufw` once stable.
+
+## 9. Backups & firewall
+
+**DB backups** (`deploy/backup-db.sh`): daily online snapshot, gzipped, newest 14
+kept under `/opt/football-betting/backups/` (gitignored). Install the cron:
+```bash
+( crontab -l 2>/dev/null; echo "0 4 * * * /opt/football-betting/deploy/backup-db.sh >> /var/log/db-backup.log 2>&1" ) | crontab -
+/opt/football-betting/deploy/backup-db.sh   # run once to verify
+```
+Restore: `gunzip -c backups/database-<ts>.db.gz > restored.db`.
+
+**Firewall** (`deploy/firewall.sh`): ufw allowing SSH from anywhere and 80/443
+only from Cloudflare ranges, default-deny incoming — so the origin is reachable
+only through Cloudflare. Also, PM2 binds Next to `127.0.0.1:3000`
+(ecosystem.config.cjs) so the app is never exposed on the public `:3000`.
+```bash
+bash /opt/football-betting/deploy/firewall.sh
+```
