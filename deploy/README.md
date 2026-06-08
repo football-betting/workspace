@@ -157,10 +157,10 @@ Cloudflare's trusted edge certificate regardless.
 
 ## 9. Backups & firewall
 
-**DB backups** (`deploy/backup-db.sh`): daily online snapshot, gzipped, newest 14
+**DB backups** (`deploy/backup-db.sh`): online snapshot every 6h, gzipped, newest 28 (~1 week)
 kept under `/opt/football-betting/backups/` (gitignored). Install the cron:
 ```bash
-( crontab -l 2>/dev/null; echo "0 4 * * * /opt/football-betting/deploy/backup-db.sh >> /var/log/db-backup.log 2>&1" ) | crontab -
+( crontab -l 2>/dev/null; echo "0 */6 * * * RETAIN=28 /opt/football-betting/deploy/backup-db.sh >> /var/log/db-backup.log 2>&1" ) | crontab -
 /opt/football-betting/deploy/backup-db.sh   # run once to verify
 ```
 Restore: `gunzip -c backups/database-<ts>.db.gz > restored.db`.
