@@ -7,15 +7,15 @@ Alles unten ist **WAS** das Frontend tut — UI-Klassen / Tailwind-Snippets sind
 
 ## 0) Aktueller Stack (zur Kenntnis, nicht zum Mitnehmen)
 
-| Schicht        | Heute                                          | Empfehlung für Neubau                    |
-|----------------|------------------------------------------------|------------------------------------------|
-| Framework      | Astro 4.10 + SSR (`@astrojs/node`)             | Next.js 15 App Router                    |
-| Interactivity  | Alpine.js + vanilla DOM-scripts                | React Server/Client Components           |
-| Styling        | TailwindCSS 3.4 + custom CSS-grid              | TailwindCSS 4 (neues Design-System!)     |
-| ORM            | Drizzle ORM + better-sqlite3                   | Drizzle ORM (Postgres oder SQLite egal)  |
-| Auth           | Lucia v3 + Argon2id (oslo/password)            | Auth.js (NextAuth) **oder** Lucia v3     |
-| Externe API    | `fetchApi` zu Rust `betting-api` (port 8080)   | gleiche API behalten                     |
-| Build/Pkg      | pnpm (Bun nur Dev, Bug mit SQLite3 in prod)    | pnpm                                     |
+| Schicht       | Heute                                        | Empfehlung für Neubau                   |
+| ------------- | -------------------------------------------- | --------------------------------------- |
+| Framework     | Astro 4.10 + SSR (`@astrojs/node`)           | Next.js 15 App Router                   |
+| Interactivity | Alpine.js + vanilla DOM-scripts              | React Server/Client Components          |
+| Styling       | TailwindCSS 3.4 + custom CSS-grid            | TailwindCSS 4 (neues Design-System!)    |
+| ORM           | Drizzle ORM + better-sqlite3                 | Drizzle ORM (Postgres oder SQLite egal) |
+| Auth          | Lucia v3 + Argon2id (oslo/password)          | Auth.js (NextAuth) **oder** Lucia v3    |
+| Externe API   | `fetchApi` zu Rust `betting-api` (port 8080) | gleiche API behalten                    |
+| Build/Pkg     | pnpm (Bun nur Dev, Bug mit SQLite3 in prod)  | pnpm                                    |
 
 ---
 
@@ -68,6 +68,7 @@ tip {
 ```
 
 ### Wichtige Daten-Verträge
+
 - **`match.homeTeam` / `awayTeam` sind JSON-Objekte** mit mindestens `{name, tla}`. Das Rust-Backend (`betting-api`) deserialisiert das.
 - **`tla` ist ISO3 — aber gemischt**: in der DB / im API-JSON erscheinen sowohl FIFA-Codes (`GER`, `NED`, `CRO`, `SUI`) wie auch ISO3 (`DEU`, `NLD`, `HRV`, `CHE`). Im Frontend gibt es eine `countryMapping`-Tabelle in `Flag.astro` zum Übersetzen → muss übernommen werden, sonst gibt's keine Flaggen.
 - **`utcDate` ist `int (unix-timestamp)`** in der DB, das Frontend wandelt via `new Date(int * ...)`. Drizzle `mode: 'timestamp'` macht das automatisch.
@@ -103,30 +104,33 @@ tip {
 
 ## 3) Seiten / Routen — komplette Liste
 
-| Pfad                 | Auth   | Layout         | Aufgabe                                                                                                                                                                                                                |
-|----------------------|--------|----------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `/`                  | ✅     | LogginLayout   | **Dashboard**: Mini-Ranking (`ShortTable`) + Spielplan zukünftig (sortiert `utcDate ASC`, gruppiert nach Datum) + Live-Matches mit aktuellen Punkten + Tipp-Formulare pro Spiel.                                       |
-| `/login`             | ❌     | Layout         | E-Mail/Passwort-Form → POST `/api/auth/login`. Bei `?registered=true` Success-Banner. Eingeloggte → redirect `/`.                                                                                                       |
-| `/signup`            | ❌     | Layout         | Registrierung: email, password, rePassword (Client-Side-Check), firstName, lastName, username, department (Select), winner + secretWinner (Selects mit 24 EM-Teams). POST `/api/user`. Eingeloggte → redirect `/`.   |
-| `/password-forget`   | ❌     | Layout         | Stub — Backend ist **auskommentiert** (siehe §6). UI vorhanden, aber Funktion nicht implementiert.                                                                                                                      |
-| `/table`             | ✅     | LogginLayout   | Volle Ranking-Tabelle mit 4 Tabs: **Global / Langenfeld / Mannheim / Mainz** (`Maintz` in DB). Daten von Rust `GET /rating`. Spalten: Position, Username, RE, T, S, EP, P. Aktuelle Zeile = gelb hervorgehoben.        |
-| `/user/[id]`         | ✅     | LogginLayout   | User-Profil: Name, Standort, Platz, Punkte, RE, T, S, EP, Flag-Tipps (winner + secretWinner). + Liste der Tipps des Users mit Spielergebnis und erzieltem Punkt. **Tipps kommen vom Rust-API bereits sortiert nach `date DESC`** (Rust `routes.rs:76`). |
-| `/match/[id]`        | ✅     | LogginLayout   | Match-Detail: Spielinfo (Teams, Score oder LIVE-Badge, Datum/Zeit). Tabelle mit allen Tipps **aller User** für dieses Match. **Client-side sortiert nach `score DESC`** (`pages/match/[id].astro:23`: `data.sort((a,b)=>b.score-a.score)`). Aktueller User = gelb. |
-| `/api/auth/login`    | -      | POST           | Login-Handler (siehe §5.1)                                                                                                                                                                                              |
-| `/api/auth/logout`   | -      | GET            | Logout-Handler                                                                                                                                                                                                          |
-| `/api/auth/password-forget` | - | POST       | **stub / Body komplett auskommentiert** — gibt 302 auf `/admin/login` (dead route)                                                                                                                                     |
-| `/api/user`          | -      | POST           | Signup-Handler (siehe §5.2)                                                                                                                                                                                             |
-| `/api/tip/[matchId]` | ✅     | POST           | Tipp speichern/aktualisieren (siehe §5.3)                                                                                                                                                                               |
-| ~~`/api/match/import`~~ | — | — | Entfernt in FE-019. `macht-api` schreibt direkt in SQLite. |
+| Pfad                        | Auth | Layout       | Aufgabe                                                                                                                                                                                                                                                            |
+| --------------------------- | ---- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/`                         | ✅   | LogginLayout | **Dashboard**: Mini-Ranking (`ShortTable`) + Spielplan zukünftig (sortiert `utcDate ASC`, gruppiert nach Datum) + Live-Matches mit aktuellen Punkten + Tipp-Formulare pro Spiel.                                                                                   |
+| `/login`                    | ❌   | Layout       | E-Mail/Passwort-Form → POST `/api/auth/login`. Bei `?registered=true` Success-Banner. Eingeloggte → redirect `/`.                                                                                                                                                  |
+| `/signup`                   | ❌   | Layout       | Registrierung: email, password, rePassword (Client-Side-Check), firstName, lastName, username, department (Select), winner + secretWinner (Selects mit 24 EM-Teams). POST `/api/user`. Eingeloggte → redirect `/`.                                                 |
+| `/password-forget`          | ❌   | Layout       | ~~Stub~~ → **implementiert** (Next.js): ersetzt durch `/forgot-password` (E-Mail-Eingabe) + `/reset-password?token=…` (neues Passwort). E-Mail-basierter Token-Flow, siehe `app/api/auth/forgot-password` / `reset-password`.                                      |
+| `/faq`                      | ✅   | LogginLayout | FE-094: statische FAQ-Seite zum Tipspiel (Tippen/Wertung, Rangliste, Konto/Technik), zweisprachig DE/EN, Inhalte als `<details>`-Accordion. Layout wie `/features`.                                                                                                |
+| `/table`                    | ✅   | LogginLayout | Volle Ranking-Tabelle mit 4 Tabs: **Global / Langenfeld / Mannheim / Mainz** (`Maintz` in DB). Daten von Rust `GET /rating`. Spalten: Position, Username, RE, T, S, EP, P. Aktuelle Zeile = gelb hervorgehoben.                                                    |
+| `/user/[id]`                | ✅   | LogginLayout | User-Profil: Name, Standort, Platz, Punkte, RE, T, S, EP, Flag-Tipps (winner + secretWinner). + Liste der Tipps des Users mit Spielergebnis und erzieltem Punkt. **Tipps kommen vom Rust-API bereits sortiert nach `date DESC`** (Rust `routes.rs:76`).            |
+| `/match/[id]`               | ✅   | LogginLayout | Match-Detail: Spielinfo (Teams, Score oder LIVE-Badge, Datum/Zeit). Tabelle mit allen Tipps **aller User** für dieses Match. **Client-side sortiert nach `score DESC`** (`pages/match/[id].astro:23`: `data.sort((a,b)=>b.score-a.score)`). Aktueller User = gelb. |
+| `/api/auth/login`           | -    | POST         | Login-Handler (siehe §5.1)                                                                                                                                                                                                                                         |
+| `/api/auth/logout`          | -    | GET          | Logout-Handler                                                                                                                                                                                                                                                     |
+| `/api/auth/password-forget` | -    | POST         | ~~stub~~ → **implementiert** (Next.js): `app/api/auth/forgot-password` (Reset-Token + E-Mail, rate-limited) und `app/api/auth/reset-password` (Token einlösen). Legacy-302-auf-`/admin/login` entfällt.                                                            |
+| `/api/user`                 | -    | POST         | Signup-Handler (siehe §5.2)                                                                                                                                                                                                                                        |
+| `/api/tip/[matchId]`        | ✅   | POST         | Tipp speichern/aktualisieren (siehe §5.3)                                                                                                                                                                                                                          |
+| ~~`/api/match/import`~~     | —    | —            | Entfernt in FE-019. `macht-api` schreibt direkt in SQLite.                                                                                                                                                                                                         |
 
 ---
 
 ## 4) Auth & Sessions
 
 ### 4.1 Library
+
 **Lucia v3** mit `@lucia-auth/adapter-drizzle`. Session-Cookie heißt wie von Lucia generiert. `Astro.locals.user` enthält **`id` + `email`** — via `getUserAttributes` (`src/lib/auth.ts:16-20`) wird `email` aus der DB-Row in das User-Objekt exposed. Im Code wird aktuell nur `.id` verwendet, aber `email` ist für Neubau im Type verfügbar.
 
 ### 4.2 Password-Hashing
+
 **Argon2id** über `oslo/password`. Nicht bcrypt — Argon2 (RFC 9106) ist Standard.
 
 ```ts
@@ -135,6 +139,7 @@ const ok = await new Argon2id().verify(hash, plainPassword);
 ```
 
 ### 4.3 Middleware (`src/middleware.ts`)
+
 Läuft bei **jedem Request**:
 
 1. CSRF-Schutz: Für alle Non-GET-Requests wird `Origin` gegen `Host` geprüft via `verifyRequestOrigin(originHeader, [hostHeader])`. (Die historische `Origin: RUST_APPLICATION`-Ausnahme für `/api/match/import` ist mit FE-019 weggefallen — der Endpoint existiert nicht mehr.)
@@ -142,15 +147,19 @@ Läuft bei **jedem Request**:
 3. `context.locals.user` und `context.locals.session` setzen (oder beide `null`).
 
 **Sicherheit-Findings für Neubau**:
+
 - `Origin: RUST_APPLICATION` ist ein magic-string-Bypass, kein echter Schutz. Im Neuaufbau: dedizierten **API-Key/Bearer-Token** im Header oder mTLS/internes Netzwerk.
 - Routes nutzen `context.locals.user` direkt im Astro-Frontmatter; Next.js Equivalent: `auth()` in Server Components / Route Handlers.
 
 ### 4.4 Page-Guard-Pattern
+
 Jede geschützte Seite hat oben:
+
 ```ts
 const user = Astro.locals.user;
 if (!user) return Astro.redirect("/login");
 ```
+
 In Next.js: zentraler Middleware-Guard oder `auth()`-Check in Server Components.
 
 ---
@@ -161,10 +170,12 @@ In Next.js: zentraler Middleware-Guard oder `auth()`-Check in Server Components.
 
 Input: form-data `email`, `password`.
 Validierung:
+
 - `email` typeof string && length ≥ 3 (sehr lax)
 - `password` typeof string && length 4..255
 
 Flow:
+
 1. `getUserByEmail(email)` — wenn nicht da: 400 `"E-Mail ist bei uns nicht registriert."`
 2. `Argon2id().verify(user.password, password)` — bei false: 400 `"Falsche E-Mail oder falsches Passwort."`
 3. `lucia.createSession(user.id.toString(), {})` + `createSessionCookie()` → Cookie setzen
@@ -173,28 +184,34 @@ Flow:
 ⚠️ **Information disclosure**: Unterschiedliche Fehlermeldungen verraten ob E-Mail existiert. Im Neuaufbau einheitliche Message `"E-Mail oder Passwort falsch."`
 
 ### 5.2 `POST /api/user` (`pages/api/user/index.ts`) — Signup
+
 Input: `email, password, firstName, lastName, username, department, winner, secretWinner`.
 
 Validierung:
+
 - Alle Felder Required → bei missing: 400 mit Liste
 - `getUserByEmail(email)` — wenn vorhanden: 400 `"User <email> already exists"`
 - `winner === secretWinner` → 400 `"Winner and secret winner cannot be the same team."`
 
 Flow:
+
 1. `password = await Argon2id().hash(password)`
 2. `createUser({...})`
 3. Redirect 302 → `/login?registered=true`
 
 **Fehlt für Production-Neubau:**
+
 - E-Mail-Format-Validierung (echte Regex/Zod)
 - Passwort-Komplexitäts-Regel
 - Rate-Limit
 - `username` Unique-Check (im aktuellen Schema NICHT unique — Duplikate möglich!)
 
 ### 5.3 `POST /api/tip/[matchId]`
+
 Input: form-data `tip1`, `tip2`. Cookie-Session.
 
 Validierung-Reihenfolge:
+
 1. `session && session.userId` → sonst 401 `"user is not logged in"`
 2. `userId` numerisch — sonst 401 `"UserId not found"`
 3. `matchId` numerisch — sonst 401 `"MatchId not found"`
@@ -204,6 +221,7 @@ Validierung-Reihenfolge:
 6. `tip1`, `tip2` → parseInt; jeweils im Bereich `0..20`. Beide Fehler werden gesammelt.
 
 Flow:
+
 - `saveTip(userId, matchId, tip1, tip2)`:
   - Wenn Tipp existiert → UPDATE (`scoreHome`, `scoreAway`, `date = now`)
   - Sonst → INSERT
@@ -212,11 +230,13 @@ Flow:
 ⚠️ HTTP-Codes inkonsistent: validation-fail = 401 statt 400. Im Neubau richtig setzen.
 
 ### 5.4 `POST /api/match/import` — **entfernt in FE-019 (2026-05-28)**
+
 Der Endpoint ist im Neubau nicht mehr enthalten. `macht-api` schreibt
 weiterhin direkt in SQLite via `rusqlite`. Demo-Daten kommen aus
 `scripts/demo_data.ts` über `pnpm db:seed` (FE-007).
 
 ### 5.5 `GET /api/auth/logout`
+
 - 401 wenn keine Session
 - `lucia.invalidateSession()` + leere Cookie setzen
 - Redirect → `/login`
@@ -227,36 +247,36 @@ weiterhin direkt in SQLite via `rusqlite`. Demo-Daten kommen aus
 
 ## 6) Bekannte Bugs / Halb-Implementierungen
 
-| Fundstelle                                | Problem                                                                                              |
-|-------------------------------------------|-------------------------------------------------------------------------------------------------------|
-| `pages/api/auth/password-forget.ts`       | Body komplett auskommentiert. Redirect-URL ist `/admin/login` (existiert nicht).                       |
-| `pages/password-forget.astro`             | Form sendet zu obigem Stub. Schickt nichts.                                                            |
-| `pages/login.astro:46`                    | "Passwort vergessen?" Link auskommentiert — wegen 6.1.                                                 |
-| `lib/api.ts:8`                            | `findIndex` gibt -1 wenn User nicht in `slice(3)` ist; Logik nimmt dann `topThree = slice(0,6)`. OK aber wenig elegant. |
-| `pages/index.astro:23`                    | `sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate))` — TypeScript-mässig dürfte das nicht funktionieren (Date-Sub), läuft aber dank JS-Coercion. |
-| `pages/api/tip/[matchId].ts:60`           | (kein Bug, nur dokumentiert): Tippen nach Match-Anpfiff ist **bewusst** blockiert — Bedingung `matchDate < now || homeScore!==null || awayScore!==null`. Datumsbasiert allein, ein verspätet importiertes Match kann nach Anpfiff nicht mehr getippt werden — was richtig ist. |
-| `pages/api/user/index.ts:33`              | `Missing required fields: ${joined}s` — `s` als String-Konkatenation an joined-Liste (siehe §14.6). Bei einem fehlenden Feld liest sich's komisch (`emails`, `passwords`).                                                                                                |
-| `scripts/demo_data.ts:110`                | `new Date(now.setMonth(now.getMonth() + 1))` mutiert `now` für nachfolgende Berechnungen. Match 5 ist letzter Eintrag, daher aktuell harmlos — aber Anti-Pattern.                                                                                                          |
-| `pages/api/user/index.ts:59`              | `new Argon2id()` ohne Konfiguration → nimmt oslo-Defaults. Für Production sollten `memorySize`, `iterations`, `tagLength`, `parallelism` explizit gesetzt werden (OWASP-Empfehlung 19MiB / t=2 für Argon2id).                                                              |
-| `db/schemas/schema.ts` & UI               | `department='Maintz'` (Tippfehler). Frontend mapped bei Anzeige.                                       |
-| `interfaces/match.ts`                     | `Team.crest` ist required, in DB optional → potenzieller Crash, aber im UI nur `tla`/`name` genutzt.   |
-| `layouts/LogginLayout.astro:43`           | Hardcoded Department-Tabs (`Global / Langenfeld / Mannheim / Mainz`) — nicht datengetrieben.           |
+| Fundstelle                          | Problem                                                                                                                                                                                                       |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- | ---------------- | --- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `pages/api/auth/password-forget.ts` | _(Legacy-Astro)_ Body komplett auskommentiert, Redirect-URL `/admin/login`. **Abgelöst:** in Next.js implementiert als `app/api/auth/forgot-password` + `reset-password` (siehe §3).                          |
+| `pages/password-forget.astro`       | _(Legacy-Astro)_ Form sendet zu obigem Stub. **Abgelöst** durch `/forgot-password` + `/reset-password` (siehe §3).                                                                                            |
+| `pages/login.astro:46`              | _(Legacy-Astro)_ "Passwort vergessen?" Link auskommentiert. **Abgelöst:** in Next.js aktiv verlinkt.                                                                                                          |
+| `lib/api.ts:8`                      | `findIndex` gibt -1 wenn User nicht in `slice(3)` ist; Logik nimmt dann `topThree = slice(0,6)`. OK aber wenig elegant.                                                                                       |
+| `pages/index.astro:23`              | `sort((a,b) => new Date(a.utcDate) - new Date(b.utcDate))` — TypeScript-mässig dürfte das nicht funktionieren (Date-Sub), läuft aber dank JS-Coercion.                                                        |
+| `pages/api/tip/[matchId].ts:60`     | (kein Bug, nur dokumentiert): Tippen nach Match-Anpfiff ist **bewusst** blockiert — Bedingung `matchDate < now                                                                                                |     | homeScore!==null |     | awayScore!==null`. Datumsbasiert allein, ein verspätet importiertes Match kann nach Anpfiff nicht mehr getippt werden — was richtig ist. |
+| `pages/api/user/index.ts:33`        | `Missing required fields: ${joined}s` — `s` als String-Konkatenation an joined-Liste (siehe §14.6). Bei einem fehlenden Feld liest sich's komisch (`emails`, `passwords`).                                    |
+| `scripts/demo_data.ts:110`          | `new Date(now.setMonth(now.getMonth() + 1))` mutiert `now` für nachfolgende Berechnungen. Match 5 ist letzter Eintrag, daher aktuell harmlos — aber Anti-Pattern.                                             |
+| `pages/api/user/index.ts:59`        | `new Argon2id()` ohne Konfiguration → nimmt oslo-Defaults. Für Production sollten `memorySize`, `iterations`, `tagLength`, `parallelism` explizit gesetzt werden (OWASP-Empfehlung 19MiB / t=2 für Argon2id). |
+| `db/schemas/schema.ts` & UI         | `department='Maintz'` (Tippfehler). Frontend mapped bei Anzeige.                                                                                                                                              |
+| `interfaces/match.ts`               | `Team.crest` ist required, in DB optional → potenzieller Crash, aber im UI nur `tla`/`name` genutzt.                                                                                                          |
+| `layouts/LogginLayout.astro:43`     | Hardcoded Department-Tabs (`Global / Langenfeld / Mannheim / Mainz`) — nicht datengetrieben.                                                                                                                  |
 
 ---
 
 ## 7) UI-Elemente / Komponenten (was sie tun, NICHT wie sie aussehen)
 
-| Komponente            | Funktion                                                                                                 |
-|-----------------------|----------------------------------------------------------------------------------------------------------|
-| `Layout`              | Public-Layout (Logo header, kein Nav).                                                                    |
-| `LogginLayout`        | Eingeloggt-Layout: Logo + Nav (Dashboard / Tabelle / Mein Konto / Abmelden), aktiver Link unterstrichen.  |
-| `Logo`                | Statisches Logo: "Euro '24" + "a valantic guessing game".                                                 |
-| `ShortTable`          | Mini-Ranking auf Dashboard mit Tabs Global/Langenfeld/Mannheim/Mainz. **Slicing-Regel** (`lib/api.ts`): wenn User ab Platz 5 (`global.slice(3)` findIndex > 0): zeige Top 3 + 3 Nachbarn (User-1, User, User+1). Sonst (User in Top 3, User auf Platz 4, oder User nicht gefunden): zeige Top 6 statt Top 3. Department-Tabs zeigen **immer komplette Department-Liste** (kein Slicing). |
-| `Flag`                | SVG-Flagge aus `/svg/<TLA>.svg`. Erfordert ISO3→FIFA-Mapping (DEU→GER, NLD→NED, HRV→CRO, …).             |
-| `Input`               | Stylisches Input mit Label.                                                                               |
-| `Button` / `ButtonLink`| Submit-Button / Link-as-Button.                                                                          |
-| `ErrorAlert` / `SuccessAlert` | Alert-Boxen (rot/grün). Im aktuellen Code kaum benutzt — Inline-Fehler dominieren.                |
-| `Icon`                | Lazy-load von SVG aus `src/icon/` via Vite raw-import.                                                   |
+| Komponente                    | Funktion                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Layout`                      | Public-Layout (Logo header, kein Nav).                                                                                                                                                                                                                                                                                                                                                   |
+| `LogginLayout`                | Eingeloggt-Layout: Logo + Nav (Dashboard / Tabelle / Mein Konto / Abmelden), aktiver Link unterstrichen.                                                                                                                                                                                                                                                                                 |
+| `Logo`                        | Statisches Logo: "Euro '24" + "a valantic guessing game".                                                                                                                                                                                                                                                                                                                                |
+| `ShortTable`                  | Mini-Ranking auf Dashboard mit Tabs Global/Langenfeld/Mannheim/Mainz. **Slicing-Regel** (`lib/api.ts`): wenn User ab Platz 5 (`global.slice(3)` findIndex > 0): zeige Top 3 + 3 Nachbarn (User-1, User, User+1). Sonst (User in Top 3, User auf Platz 4, oder User nicht gefunden): zeige Top 6 statt Top 3. Department-Tabs zeigen **immer komplette Department-Liste** (kein Slicing). |
+| `Flag`                        | SVG-Flagge aus `/svg/<TLA>.svg`. Erfordert ISO3→FIFA-Mapping (DEU→GER, NLD→NED, HRV→CRO, …).                                                                                                                                                                                                                                                                                             |
+| `Input`                       | Stylisches Input mit Label.                                                                                                                                                                                                                                                                                                                                                              |
+| `Button` / `ButtonLink`       | Submit-Button / Link-as-Button.                                                                                                                                                                                                                                                                                                                                                          |
+| `ErrorAlert` / `SuccessAlert` | Alert-Boxen (rot/grün). Im aktuellen Code kaum benutzt — Inline-Fehler dominieren.                                                                                                                                                                                                                                                                                                       |
+| `Icon`                        | Lazy-load von SVG aus `src/icon/` via Vite raw-import.                                                                                                                                                                                                                                                                                                                                   |
 
 ---
 
@@ -300,27 +320,33 @@ macht-api (Rust, cron) ──► externe API ──► SQLite match-Tabelle
 ```
 
 ### 8.3 Live-Match-Punkte auf Dashboard
+
 - `getLiveMatch()` (DB-direkt) → alle Matches mit `status='IN_PLAY'`
 - Anschließend: `fetchApi('user/{id}')` (Rust-API) → User-Objekt mit `tips[]` (jeder Tip enthält bereits berechneten `score`)
 - Filter Tips wo `match_id ∈ liveMatchIds` → zeigt User seine aktuellen Punkte (5 grün, 3 gelb, 0 rot, sonst neutral) **live**.
 
 ### 8.4 Punkte-Farben (überall konsistent)
+
 - **5 Punkte (exakt)** → grün (`text-green-500`)
 - **3 Punkte (Tordifferenz, kein Unentschieden)** → gelb (`text-yellow-300`)
 - **2 Punkte (Siegrichtung / korrektes Unentschieden)** → kein speziell genannt — fällt in den "neutralen" Fall
 - **0 Punkte** → rot (`text-red-500`)
 
 Im Neubau in `lib/scoring.ts` zentralisieren:
+
 ```ts
 export const scoreColor = (n: number) =>
-  n === 5 ? 'success' : n === 3 ? 'warning' : n === 0 ? 'danger' : 'muted';
+  n === 5 ? "success" : n === 3 ? "warning" : n === 0 ? "danger" : "muted";
 ```
 
 ### 8.5 Username-Truncation
+
 `abbreviateUsername(name)` — wenn `length > 17`, auf 14 Zeichen + `…`. Überall im Ranking verwendet.
 
 ### 8.6 Department-Liste
+
 Aktuell hardgecodet:
+
 - `Langenfeld` (im Signup-Select: `"Langenfeld / Siegen"`)
 - `Mannheim`
 - `Maintz` (UI-Anzeige `Mainz`)
@@ -328,6 +354,7 @@ Aktuell hardgecodet:
 → Im Neubau **in eine Konstante/DB-Tabelle** ziehen, damit datengetrieben.
 
 ### 8.7 EM-Team-Liste (Signup-Selects)
+
 24 Teams als ISO3-Codes — siehe `signup.astro` Zeile 56–80. **Nicht-EM-Turnier-spezifisch** behalten: Teams als Datenstruktur / Enum / DB-Tabelle definieren statt zweimal hartcodiert. Wichtig: `winner !== secretWinner` Server-Side erzwingen (passiert bereits).
 
 ---
@@ -394,6 +421,7 @@ components/
 ## 11) Datenfluss-Diagramme zur Übernahme
 
 ### Login + Tipp-Abgabe
+
 ```
 [Browser]  ──POST /api/auth/login──►  [Server]
                                          ├─ getUserByEmail
@@ -414,6 +442,7 @@ components/
 ```
 
 ### Rendering der Ranking-Tabelle
+
 ```
 GET /table  ──►  fetchApi('rating')  ──►  Rust betting-api
                                               ├─ aggregiert user + tip + match
@@ -426,6 +455,7 @@ GET /table  ──►  fetchApi('rating')  ──►  Rust betting-api
 ## 12) Infrastruktur / Deployment
 
 ### 12.1 Process Manager (`ecosystem.config.json`)
+
 - **PM2** mit `node ./dist/server/entry.mjs` (Astro Standalone-Build).
 - Port **4322** (nicht 3000/8080).
 - `autorestart: true`, `restart_delay: 5000ms`, `max_memory_restart: 500M`.
@@ -434,6 +464,7 @@ GET /table  ──►  fetchApi('rating')  ──►  Rust betting-api
 Für Next.js-Neubau: `next start -p 4322` analog (oder Vercel/Docker).
 
 ### 12.2 Reverse-Proxy (`.github/server/nginx/site-available`)
+
 - Domain `em2024.vcec.cloud`, **HTTPS via Let's Encrypt**, HTTP→HTTPS 301-Redirect.
 - `proxy_pass http://[::1]:4322` mit Standard-Forwarding-Headern (`X-Real-IP`, `X-Forwarded-For`, `X-Forwarded-Proto`, `Host`).
 - **WebSocket-Support aktiv** (`Upgrade` / `Connection`) — vermutlich für Astro HMR im Dev-Modus (im Prod ungenutzt). Bei Next.js: gleich behalten falls Realtime/HMR-Tunnel gewollt.
@@ -443,6 +474,7 @@ Für Next.js-Neubau: `next start -p 4322` analog (oder Vercel/Docker).
 → Im Neubau: SVGs unter `public/svg/` lassen, Next.js liefert sie eh statisch. nginx-Snippet kann fast 1:1 übernommen werden (nur upstream-Port ändert sich nicht).
 
 ### 12.3 CI/CD (`.github/workflows/main.yml`)
+
 - Trigger: push + pr auf `main`.
 - **Node 21** + pnpm.
 - **Timezone Europe/Berlin** wird explizit gesetzt — wichtig wegen `formatDate('de-DE')` und Zeitstempel-Tests.
@@ -452,6 +484,7 @@ Für Next.js-Neubau: `next start -p 4322` analog (oder Vercel/Docker).
 → Neubau: Playwright reaktivieren oder durch Vitest+Testing-Library-Komponententests ersetzen.
 
 ### 12.4 `.gitignore` — was NICHT versioniert ist
+
 ```
 dist/
 .astro/
@@ -474,6 +507,7 @@ db/database.db      ⚠️ DB-File nicht im Repo
 > `DESIGN.md` ins Tailwind-v4 `@theme`-Block portiert.
 
 ### 13.1 Tailwind v4 `@theme`
+
 Die alten v3-spezifischen Config-Felder (`tailwind.config.mjs`) entfallen.
 Tokens werden in `app/globals.css` via `@theme` deklariert. Der Pflicht-Stack:
 
@@ -484,6 +518,7 @@ Beide Fonts via `next/font/google` — keine TTF-Dateien mehr im Repo,
 keine `@font-face`-Blöcke in `globals.css`.
 
 ### 13.2 Schriftverwendung
+
 - **Hanken Grotesk** Regular/SemiBold/Bold/ExtraBold → Body + UI + alle
   Headlines (`display`, `headline-lg`, `headline-md`, `body-lg`, `body-sm`).
 - **JetBrains Mono** → Score-Zahlen, Punkte-Werte, Match-Minute, Kick-off-Zeit,
@@ -517,6 +552,7 @@ einzelne PNG- oder SVG-Datei aus `public/icons/`, referenziert als
 `<img src="/icons/foo.svg" />` oder als CSS-Background-Sprite. Nie inline.
 
 **Verboten:**
+
 - Inline `<svg>…</svg>` in JSX
 - `dangerouslySetInnerHTML` mit SVG-Inhalt
 - SVG-as-React-Component (`import Icon from './icon.svg'`), SVGR-Loader
@@ -541,13 +577,14 @@ grep -rn "lucide-react|@heroicons|react-icons|@radix-ui/react-icons|@tabler/icon
 Alle drei Greps müssen 0 Treffer liefern.
 
 ### 13.3 Layout-Patterns die übernommen werden müssen (nicht das Styling)
-| Pattern                        | Wofür                                                                    |
-|--------------------------------|--------------------------------------------------------------------------|
-| 2-Spalten-Grid auf Desktop     | Dashboard: Ranking links, Spielplan rechts (`lg:grid-cols-2`)            |
-| Match-Card als Grid (6×2)      | Teams links, Score Mitte, Tipp/Eingabe rechts                            |
-| Tabs via Radio-Buttons         | `<input type=radio>` + `peer-checked` → in React mit `useState` ersetzen |
-| Mobile-Abkürzungen             | Spalten-Header werden in `<lg` zu Kürzeln (RE/T/S/EP/P) — UX behalten    |
-| Aktive Zeile gelb              | `match.user_id === userId` → `text-yellow-100 font-black` + linker Rand  |
+
+| Pattern                    | Wofür                                                                    |
+| -------------------------- | ------------------------------------------------------------------------ |
+| 2-Spalten-Grid auf Desktop | Dashboard: Ranking links, Spielplan rechts (`lg:grid-cols-2`)            |
+| Match-Card als Grid (6×2)  | Teams links, Score Mitte, Tipp/Eingabe rechts                            |
+| Tabs via Radio-Buttons     | `<input type=radio>` + `peer-checked` → in React mit `useState` ersetzen |
+| Mobile-Abkürzungen         | Spalten-Header werden in `<lg` zu Kürzeln (RE/T/S/EP/P) — UX behalten    |
+| Aktive Zeile gelb          | `match.user_id === userId` → `text-yellow-100 font-black` + linker Rand  |
 
 ---
 
@@ -556,16 +593,18 @@ Alle drei Greps müssen 0 Treffer liefern.
 Die Tests dokumentieren das **erwartete Verhalten** — beim Neubau müssen diese Cases weiter funktionieren.
 
 ### 14.1 Unit-Tests (`tests/unit/lib/function.test.ts`)
-| Funktion             | Eingabe                              | Erwartet                             |
-|----------------------|--------------------------------------|--------------------------------------|
-| `filterValidGames`   | `{homeTeam:{name:'A'},awayTeam:{name:'B'}}` | true                          |
-| `filterValidGames`   | `{homeTeam:{name:null}, ...}`       | false                                |
-| `formatDate`         | `new Date(2022,11,31).getTime()`    | `"Samstag, 31. Dezember 2022"` (de-DE) |
-| `extractTime`        | `new Date(2022,11,31,13,45)`        | `"13:45"`                            |
-| `abbreviateUsername` | 26 Zeichen                          | erste 14 + `"..."` → `"verylonguserna..."` |
-| `abbreviateUsername` | 9 Zeichen                           | unverändert                          |
+
+| Funktion             | Eingabe                                     | Erwartet                                   |
+| -------------------- | ------------------------------------------- | ------------------------------------------ |
+| `filterValidGames`   | `{homeTeam:{name:'A'},awayTeam:{name:'B'}}` | true                                       |
+| `filterValidGames`   | `{homeTeam:{name:null}, ...}`               | false                                      |
+| `formatDate`         | `new Date(2022,11,31).getTime()`            | `"Samstag, 31. Dezember 2022"` (de-DE)     |
+| `extractTime`        | `new Date(2022,11,31,13,45)`                | `"13:45"`                                  |
+| `abbreviateUsername` | 26 Zeichen                                  | erste 14 + `"..."` → `"verylonguserna..."` |
+| `abbreviateUsername` | 9 Zeichen                                   | unverändert                                |
 
 ### 14.2 Integration: `lib/tip.test.ts`
+
 1. `getTipByUserAndMatch(1,1)` initial → `undefined`.
 2. `saveTip(1,1,3,2)` → `getTipByUserAndMatch(1,1)` liefert `{userId:1, matchId:1, scoreHome:3, scoreAway:2}`.
 3. `saveTip(1,1,1,3)` (selber User+Match) → **UPDATE**, neue Werte `{1,3}`.
@@ -574,7 +613,9 @@ Die Tests dokumentieren das **erwartete Verhalten** — beim Neubau müssen dies
 6. `getTipByUserAndMatchIds(_, [])` → leeres Array (Early-Return, kein DB-Call).
 
 ### 14.3 Integration: `lib/api.test.ts` (Ranking-Slicing)
+
 `getRating(userId)` liest von Rust API und schneidet so:
+
 - **User auf Platz 5 (von 7)**: `topThree = global[0..3]` + `userAndNeighbors = global[3..6]` (3 Einträge: User + 1 davor + 1 dahinter).
 - **User auf Platz 1**: `topThree = global[0..6]` (6 Einträge), `userAndNeighbors = []`.
 - **Leere Liste**: beide leer.
@@ -582,41 +623,46 @@ Die Tests dokumentieren das **erwartete Verhalten** — beim Neubau müssen dies
 → Logik exakt so übernehmen (siehe heute `lib/api.ts:7–17`).
 
 ### 14.4 Integration: `api/auth/login.test.ts`
-| Eingabe                            | Status | Error-Message                              |
-|------------------------------------|--------|--------------------------------------------|
-| `email="a@"` (length 2 < 3)        | 400    | `"Ungültige E-Mail"`                       |
-| `password="123"` (length 3 < 4)    | 400    | `"Ungültiges Passwort"`                    |
-| User nicht in DB                   | 400    | `"E-Mail ist bei uns nicht registriert."`  |
+
+| Eingabe                         | Status | Error-Message                             |
+| ------------------------------- | ------ | ----------------------------------------- |
+| `email="a@"` (length 2 < 3)     | 400    | `"Ungültige E-Mail"`                      |
+| `password="123"` (length 3 < 4) | 400    | `"Ungültiges Passwort"`                   |
+| User nicht in DB                | 400    | `"E-Mail ist bei uns nicht registriert."` |
 
 ⚠️ Login-Validierung ist sehr lax (kein Regex, nur Längenchecks).
 
 ### 14.5 Integration: `api/tip/[matchId].test.ts`
-| Szenario                                  | Status | Error                                            |
-|-------------------------------------------|--------|--------------------------------------------------|
-| Keine Session                             | 401    | `"user is not logged in"`                        |
-| `session.userId="userId"` (nicht numerisch) | 401  | `"UserId not found"`                             |
-| `params.matchId` fehlt                    | 401    | `"MatchId not found"`                            |
-| `matchId=9999999` (nicht in DB)           | 401    | `"Match not found"`                              |
-| `tip1=21, tip2=-1` (out of range)         | 401    | enthält `"außerhalb des erlaubten Bereichs"`, `"tip1"`, `"tip2"` |
-| Valid (matchId=5, tip1=2, tip2=1, userId=1) | 200 | `{success:true, tip:{matchId:5, userId:1, scoreHome:2, scoreAway:1}}` |
+
+| Szenario                                    | Status | Error                                                                 |
+| ------------------------------------------- | ------ | --------------------------------------------------------------------- |
+| Keine Session                               | 401    | `"user is not logged in"`                                             |
+| `session.userId="userId"` (nicht numerisch) | 401    | `"UserId not found"`                                                  |
+| `params.matchId` fehlt                      | 401    | `"MatchId not found"`                                                 |
+| `matchId=9999999` (nicht in DB)             | 401    | `"Match not found"`                                                   |
+| `tip1=21, tip2=-1` (out of range)           | 401    | enthält `"außerhalb des erlaubten Bereichs"`, `"tip1"`, `"tip2"`      |
+| Valid (matchId=5, tip1=2, tip2=1, userId=1) | 200    | `{success:true, tip:{matchId:5, userId:1, scoreHome:2, scoreAway:1}}` |
 
 ⚠️ Test verlässt sich auf Demo-Daten: `matchId=5` ist `NLD vs POL` in der **Zukunft** (1 Monat später) — sonst greift der Past-Match-Guard.
 
 ### 14.6 Integration: `api/user/index.test.ts`
-| Szenario                          | Erwartet                                                            |
-|-----------------------------------|---------------------------------------------------------------------|
-| Erfolgreicher Signup              | redirect zu `"/login?registered=true"`, User in DB mit Argon2-Hash  |
-| Selbe E-Mail nochmal              | 400, `"User test@example.com already exists"`                       |
-| `username` + `department` fehlen  | 400, `"Missing required fields: username, departments"` ⚠️ **kein Tippfehler — `s` wird IMMER angehängt** an die joined-Liste (`...join(', ')}s\``, `pages/api/user/index.ts:33`). Nur 1 fehlend `email` → `"...: emails"`. |
-| `winner === secretWinner`         | 400, `"Winner and secret winner cannot be the same team."`          |
+
+| Szenario                         | Erwartet                                                                                                                                                                                                                  |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Erfolgreicher Signup             | redirect zu `"/login?registered=true"`, User in DB mit Argon2-Hash                                                                                                                                                        |
+| Selbe E-Mail nochmal             | 400, `"User test@example.com already exists"`                                                                                                                                                                             |
+| `username` + `department` fehlen | 400, `"Missing required fields: username, departments"` ⚠️ **kein Tippfehler — `s` wird IMMER angehängt** an die joined-Liste (`...join(', ')}s\``, `pages/api/user/index.ts:33`). Nur 1 fehlend `email`→`"...: emails"`. |
+| `winner === secretWinner`        | 400, `"Winner and secret winner cannot be the same team."`                                                                                                                                                                |
 
 → **`s`-Tippfehler in Error-Message** ist live und wird im Test fixiert. Beim Neubau: korrigieren (User-facing!), Test anpassen.
 
 ### 14.7 Acceptance (Playwright, in CI deaktiviert)
+
 - `signup_and_login.spec.ts`: Vollständiger Signup → automatischer Redirect zu Login mit Success-Banner → Login → Dashboard mit Heading "Spielplan" sichtbar.
 - `login_and_tip.spec.ts`: Login mit Fixture-User → Dashboard → erstes Tipp-Form füllen → save → Wert sichtbar → Logout → Login-Heading sichtbar.
 
 ### 14.8 Test-Datenbank-Setup
+
 - **Kein Test-DB-Isolation** — Tests laufen gegen dieselbe `db/database.db` wie Dev.
 - `afterEach` löscht User-Tipps manuell (`tip.test.ts`: userId 1+2).
 - `afterAll` löscht erstellte User (`user/index.test.ts`: `test@example.com`).
@@ -639,17 +685,18 @@ Die Tests dokumentieren das **erwartete Verhalten** — beim Neubau müssen dies
 
 ```ts
 declare namespace App {
-    interface Locals {
-        session: import("lucia").Session | null;
-        user:    import("lucia").User | null;
-    }
+  interface Locals {
+    session: import("lucia").Session | null;
+    user: import("lucia").User | null;
+  }
 }
 interface ImportMetaEnv {
-    readonly API_URL: string;   // = Rust betting-api Base-URL
+  readonly API_URL: string; // = Rust betting-api Base-URL
 }
 ```
 
 → Next.js-Equivalent:
+
 - Session/User aus `auth()`-Helper (NextAuth) oder Lucia-Adapter direkt
 - `API_URL` als `process.env.RUST_API_URL` (nicht `NEXT_PUBLIC_` — Server-only, leakt sonst)
 
@@ -660,6 +707,7 @@ interface ImportMetaEnv {
 ```ts
 fetchApi<T>(endpoint: string, wrappedByKey?: string): Promise<T>
 ```
+
 - Baut URL: `API_URL` + `endpoint`, trimmt führende Slashes auf beiden Seiten.
 - Macht `fetch` (kein Auth-Header — Rust-API ist unauthenticated, public!).
 - Wenn `wrappedByKey` gesetzt: `return data[wrappedByKey]`.
@@ -691,6 +739,7 @@ fetchApi<T>(endpoint: string, wrappedByKey?: string): Promise<T>
 ✅ Icon-Verzeichnis (1 SVG)
 
 **Nicht im Repo, aber durch CLAUDE.md-/Kontext-Wissen bekannt:**
+
 - Echte Migrations werden bei `pnpm run init` von Drizzle generiert (gitignored).
 - DB-File `db/database.db` wird bei Demo-Init gefüllt; in Prod kommt sie über Rust-Importer (`macht-api`) dazu.
 
@@ -720,6 +769,7 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 >   Drizzle-Migration + Rust-Struct-Updates.
 
 ### 19.1 Sicherheit
+
 - **CSRF-Token** auf allen POST-Forms (heute nur Origin/Host-Check — anfällig gegen Same-Origin-XSS).
 - **`Origin: RUST_APPLICATION` Magic-String → API-Key/Bearer-Token** für `/api/match/import`.
 - **Rate-Limit** auf `/api/auth/login` und `/api/user` (Brute-Force-Schutz). Z.B. via `@upstash/ratelimit` oder Edge-Middleware.
@@ -732,6 +782,7 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 - **Secure-Cookie-Flags**: heute `secure: !!import.meta.env.PROD`. Im Neubau: zusätzlich `httpOnly`, `sameSite: 'lax'`.
 
 ### 19.2 Code-Qualität
+
 - **Zod/Valibot** als zentrale Validation-Layer (login, signup, tip, match/import). Heute manuelles `if (!field)`-Geprügel.
 - **Server-Actions** (Next.js) statt `fetch + FormData` mit inline `<script>`-Blocks. Vereinfacht alles im Dashboard/Login/Signup.
 - **`departments` und EM-Teams** in eine Konstantendatei (`lib/data/teams.ts`, `lib/data/departments.ts`). Heute 2× in JSX dupliziert.
@@ -744,6 +795,7 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 - **`tip.userId` und `tip.matchId` sind nullable** im Schema (`integer('user_id').references(...)`) — sollte `notNull()` haben. Migration nötig.
 
 ### 19.3 UX / Frontend-Verhalten
+
 - **Mobile-Menu** komplett implementieren (heute auskommentiert in `LogginLayout`). Nav ist auf <450px gequetscht.
 - **Optimistic Updates** beim Tipp-Speichern (React-Query/SWR `mutate`). Heute Spinner + Reload-DOM.
 - **Live-Match-Updates per SSE/WebSocket** statt page-Reload. Rust könnte einen `/events`-Stream öffnen oder Frontend pollt `/user/{id}` alle 30s.
@@ -756,6 +808,7 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 - **Username-Truncation** als CSS `text-ellipsis` statt JS-`abbreviateUsername` — wäre responsive.
 
 ### 19.4 Performance / Architektur
+
 - **`fetchApi` mit Caching**: `next: { revalidate: 30 }` für `/rating`. Heute jeder Page-Render = neuer Rust-Call.
 - **Server Components** für Ranking-Daten (kein Hydration nötig).
 - **Edge Runtime** für `/api/tip/[matchId]` — leichte Validierung, schnelles Speichern.
@@ -763,6 +816,7 @@ Funktional gleich bleiben — diese Punkte verbessern Sicherheit, Wartbarkeit un
 - **Match-Import-Architektur überdenken**: Heute schreibt Rust direkt in SQLite, Frontend liest direkt aus SQLite, Frontend ruft Rust-API für Rankings. Wenn der Plan Postgres ist: Rust-Service muss `tokio-postgres`/`sqlx` werden.
 
 ### 19.5 Konkrete „Nice to have"-Features (waren wahrscheinlich auf der Wunschliste)
+
 - **Push-Notifications** vor Match-Start (Web Push API).
 - **Statistik-Seite** pro User: Trefferquote, beste Saison, durchschn. Punkte pro Spiel.
 - **Match-Detail mit User-Tipps-Verteilung** als Histogramm (z.B. „45% getippt 1:1").
@@ -814,12 +868,12 @@ shared/                           # gleichlevel wie alle Repos
 
 ```json
 {
-  "db:migrate":   "tsx scripts/migrate.ts",
-  "db:reset":     "rm -f $DATABASE_URL && pnpm db:migrate",
-  "db:seed":      "tsx scripts/seed-dev.ts",
+  "db:migrate": "tsx scripts/migrate.ts",
+  "db:reset": "rm -f $DATABASE_URL && pnpm db:migrate",
+  "db:seed": "tsx scripts/seed-dev.ts",
   "db:seed:test": "dotenv -e .env.test -- tsx scripts/seed-test.ts",
-  "db:fresh":     "pnpm db:reset && pnpm db:seed",
-  "test":         "pnpm db:seed:test && dotenv -e .env.test -- vitest"
+  "db:fresh": "pnpm db:reset && pnpm db:seed",
+  "test": "pnpm db:seed:test && dotenv -e .env.test -- vitest"
 }
 ```
 
@@ -832,19 +886,83 @@ shared/                           # gleichlevel wie alle Repos
 ```ts
 [
   // Mainz (2)
-  { email: 'ada@dev.local',     username: 'AdaLovelace',   firstName: 'Ada',     lastName: 'Lovelace',  department: 'Mainz',     winner: 'DEU', secretWinner: 'ESP' },
-  { email: 'alan@dev.local',    username: 'AlanTuring',    firstName: 'Alan',    lastName: 'Turing',    department: 'Mainz',     winner: 'ENG', secretWinner: 'FRA' },
+  {
+    email: "ada@dev.local",
+    username: "AdaLovelace",
+    firstName: "Ada",
+    lastName: "Lovelace",
+    department: "Mainz",
+    winner: "DEU",
+    secretWinner: "ESP",
+  },
+  {
+    email: "alan@dev.local",
+    username: "AlanTuring",
+    firstName: "Alan",
+    lastName: "Turing",
+    department: "Mainz",
+    winner: "ENG",
+    secretWinner: "FRA",
+  },
 
   // Mannheim (3)
-  { email: 'marie@dev.local',   username: 'MarieCurie',    firstName: 'Marie',   lastName: 'Curie',     department: 'Mannheim',  winner: 'FRA', secretWinner: 'DEU' },
-  { email: 'nikola@dev.local',  username: 'NikolaTesla',   firstName: 'Nikola',  lastName: 'Tesla',     department: 'Mannheim',  winner: 'HRV', secretWinner: 'ITA' },
-  { email: 'rosa@dev.local',    username: 'RosaParks',     firstName: 'Rosa',    lastName: 'Parks',     department: 'Mannheim',  winner: 'ESP', secretWinner: 'POR' },
+  {
+    email: "marie@dev.local",
+    username: "MarieCurie",
+    firstName: "Marie",
+    lastName: "Curie",
+    department: "Mannheim",
+    winner: "FRA",
+    secretWinner: "DEU",
+  },
+  {
+    email: "nikola@dev.local",
+    username: "NikolaTesla",
+    firstName: "Nikola",
+    lastName: "Tesla",
+    department: "Mannheim",
+    winner: "HRV",
+    secretWinner: "ITA",
+  },
+  {
+    email: "rosa@dev.local",
+    username: "RosaParks",
+    firstName: "Rosa",
+    lastName: "Parks",
+    department: "Mannheim",
+    winner: "ESP",
+    secretWinner: "POR",
+  },
 
   // Langenfeld (3) — incl. der "Du"-User für Testing der gelben Hervorhebung
-  { email: 'me@dev.local',      username: 'TestUser',      firstName: 'Test',    lastName: 'User',      department: 'Langenfeld', winner: 'DEU', secretWinner: 'NLD' },
-  { email: 'albert@dev.local',  username: 'AlbertEinstein',firstName: 'Albert',  lastName: 'Einstein',  department: 'Langenfeld', winner: 'DEU', secretWinner: 'ITA' },
-  { email: 'isaac@dev.local',   username: 'IsaacNewton',   firstName: 'Isaac',   lastName: 'Newton',    department: 'Langenfeld', winner: 'POR', secretWinner: 'ENG' },
-]
+  {
+    email: "me@dev.local",
+    username: "TestUser",
+    firstName: "Test",
+    lastName: "User",
+    department: "Langenfeld",
+    winner: "DEU",
+    secretWinner: "NLD",
+  },
+  {
+    email: "albert@dev.local",
+    username: "AlbertEinstein",
+    firstName: "Albert",
+    lastName: "Einstein",
+    department: "Langenfeld",
+    winner: "DEU",
+    secretWinner: "ITA",
+  },
+  {
+    email: "isaac@dev.local",
+    username: "IsaacNewton",
+    firstName: "Isaac",
+    lastName: "Newton",
+    department: "Langenfeld",
+    winner: "POR",
+    secretWinner: "ENG",
+  },
+];
 ```
 
 **Passwort für alle**: `test123` (Argon2id-Hash beim Seed berechnen, nicht hardcoded).
@@ -856,41 +974,139 @@ Verwende **relative Datumsangaben** zu `now`, damit der Seed reproduzierbar blei
 
 ```ts
 const now = Date.now();
-const HOUR = 3600_000, DAY = 86400_000;
+const HOUR = 3600_000,
+  DAY = 86400_000;
 
 [
   // ── 4× FINISHED (Vergangenheit, Tipps NICHT mehr änderbar) ──
-  { id: 1, homeTeam: TEAM.GER, awayTeam: TEAM.ESP, utcDate: now - 7*DAY, status: 'FINISHED', homeScore: 2, awayScore: 0 },
-  { id: 2, homeTeam: TEAM.POL, awayTeam: TEAM.FRA, utcDate: now - 5*DAY, status: 'FINISHED', homeScore: 1, awayScore: 1 },
-  { id: 3, homeTeam: TEAM.ENG, awayTeam: TEAM.NED, utcDate: now - 3*DAY, status: 'FINISHED', homeScore: 0, awayScore: 2 },
-  { id: 4, homeTeam: TEAM.ITA, awayTeam: TEAM.HRV, utcDate: now - 1*DAY, status: 'FINISHED', homeScore: 3, awayScore: 2 },
+  {
+    id: 1,
+    homeTeam: TEAM.GER,
+    awayTeam: TEAM.ESP,
+    utcDate: now - 7 * DAY,
+    status: "FINISHED",
+    homeScore: 2,
+    awayScore: 0,
+  },
+  {
+    id: 2,
+    homeTeam: TEAM.POL,
+    awayTeam: TEAM.FRA,
+    utcDate: now - 5 * DAY,
+    status: "FINISHED",
+    homeScore: 1,
+    awayScore: 1,
+  },
+  {
+    id: 3,
+    homeTeam: TEAM.ENG,
+    awayTeam: TEAM.NED,
+    utcDate: now - 3 * DAY,
+    status: "FINISHED",
+    homeScore: 0,
+    awayScore: 2,
+  },
+  {
+    id: 4,
+    homeTeam: TEAM.ITA,
+    awayTeam: TEAM.HRV,
+    utcDate: now - 1 * DAY,
+    status: "FINISHED",
+    homeScore: 3,
+    awayScore: 2,
+  },
 
   // ── 2× IN_PLAY (Live, treibt Live-Block auf Dashboard) ──
-  { id: 5, homeTeam: TEAM.FRA, awayTeam: TEAM.DEU, utcDate: now - 2*HOUR, status: 'IN_PLAY',  homeScore: 1, awayScore: 1 },
-  { id: 6, homeTeam: TEAM.POR, awayTeam: TEAM.ENG, utcDate: now - 1*HOUR, status: 'IN_PLAY',  homeScore: 0, awayScore: 0 },
+  {
+    id: 5,
+    homeTeam: TEAM.FRA,
+    awayTeam: TEAM.DEU,
+    utcDate: now - 2 * HOUR,
+    status: "IN_PLAY",
+    homeScore: 1,
+    awayScore: 1,
+  },
+  {
+    id: 6,
+    homeTeam: TEAM.POR,
+    awayTeam: TEAM.ENG,
+    utcDate: now - 1 * HOUR,
+    status: "IN_PLAY",
+    homeScore: 0,
+    awayScore: 0,
+  },
 
   // ── 6× SCHEDULED (Zukunft, Tippen möglich) ──
-  { id: 7,  homeTeam: TEAM.ESP, awayTeam: TEAM.ITA, utcDate: now + 2*HOUR,  status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 8,  homeTeam: TEAM.NED, awayTeam: TEAM.HRV, utcDate: now + 1*DAY,   status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 9,  homeTeam: TEAM.DEU, awayTeam: TEAM.POR, utcDate: now + 2*DAY,   status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 10, homeTeam: TEAM.FRA, awayTeam: TEAM.POL, utcDate: now + 3*DAY,   status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 11, homeTeam: TEAM.ENG, awayTeam: TEAM.ESP, utcDate: now + 7*DAY,   status: 'SCHEDULED', homeScore: null, awayScore: null },
-  { id: 12, homeTeam: TEAM.ITA, awayTeam: TEAM.DEU, utcDate: now + 14*DAY,  status: 'SCHEDULED', homeScore: null, awayScore: null },
-]
+  {
+    id: 7,
+    homeTeam: TEAM.ESP,
+    awayTeam: TEAM.ITA,
+    utcDate: now + 2 * HOUR,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+  {
+    id: 8,
+    homeTeam: TEAM.NED,
+    awayTeam: TEAM.HRV,
+    utcDate: now + 1 * DAY,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+  {
+    id: 9,
+    homeTeam: TEAM.DEU,
+    awayTeam: TEAM.POR,
+    utcDate: now + 2 * DAY,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+  {
+    id: 10,
+    homeTeam: TEAM.FRA,
+    awayTeam: TEAM.POL,
+    utcDate: now + 3 * DAY,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+  {
+    id: 11,
+    homeTeam: TEAM.ENG,
+    awayTeam: TEAM.ESP,
+    utcDate: now + 7 * DAY,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+  {
+    id: 12,
+    homeTeam: TEAM.ITA,
+    awayTeam: TEAM.DEU,
+    utcDate: now + 14 * DAY,
+    status: "SCHEDULED",
+    homeScore: null,
+    awayScore: null,
+  },
+];
 ```
 
 Team-Konstante zentral (mit FIFA-TLA für Flag-Anzeige):
+
 ```ts
 const TEAM = {
-  GER: { name: 'Germany',     tla: 'GER' },
-  ESP: { name: 'Spain',       tla: 'ESP' },
-  FRA: { name: 'France',      tla: 'FRA' },
-  ITA: { name: 'Italy',       tla: 'ITA' },
-  POR: { name: 'Portugal',    tla: 'POR' },
-  ENG: { name: 'England',     tla: 'ENG' },
-  NED: { name: 'Netherlands', tla: 'NED' },
-  POL: { name: 'Poland',      tla: 'POL' },
-  HRV: { name: 'Croatia',     tla: 'CRO' },   // ISO HRV → FIFA CRO
+  GER: { name: "Germany", tla: "GER" },
+  ESP: { name: "Spain", tla: "ESP" },
+  FRA: { name: "France", tla: "FRA" },
+  ITA: { name: "Italy", tla: "ITA" },
+  POR: { name: "Portugal", tla: "POR" },
+  ENG: { name: "England", tla: "ENG" },
+  NED: { name: "Netherlands", tla: "NED" },
+  POL: { name: "Poland", tla: "POL" },
+  HRV: { name: "Croatia", tla: "CRO" }, // ISO HRV → FIFA CRO
 };
 ```
 
@@ -899,6 +1115,7 @@ const TEAM = {
 **Ziel**: Nach dem Seed zeigt das Dashboard für jeden User unterschiedliche Punkte, alle 4 Punkte-Farben sind sichtbar, das Ranking hat keine Gleichstände (sonst sieht man Tie-Logik nicht).
 
 **Scoring zur Erinnerung** (aus Rust `betting-api/src/service/mod.rs`):
+
 - 5 Punkte = exakt (z.B. 2:0 getippt, 2:0 gespielt)
 - 3 Punkte = Tordifferenz korrekt, kein Unentschieden, Ergebnis falsch (3:1 getippt, 2:0 gespielt)
 - 2 Punkte = Sieger korrekt **ODER** Unentschieden korrekt (aber andere Tordifferenz)
@@ -908,17 +1125,18 @@ const TEAM = {
 **Tipp-Matrix** (4 vergangene + 2 Live-Matches = 6 mit Score; SCHEDULED-Matches → Tipps optional):
 
 | User           | M1 (GER:ESP 2:0) | M2 (POL:FRA 1:1) | M3 (ENG:NED 0:2) | M4 (ITA:HRV 3:2) | M5 (live FRA:DEU 1:1) | M6 (live POR:ENG 0:0) | M7 (zukunft, getippt) |
-|----------------|------------------|------------------|------------------|------------------|------------------------|------------------------|------------------------|
-| AdaLovelace    | 2:0 → **5**      | 1:1 → **5**      | 0:2 → **5**      | 3:2 → **5**      | 1:1 → **5**            | 0:0 → **5**            | 2:1 ESP:ITA           |
-| AlanTuring     | 3:1 → **3**      | 0:0 → **2**      | 1:3 → **3**      | 2:1 → **3**      | 2:2 → **2**            | 1:1 → **2**            | (kein Tipp)           |
-| MarieCurie     | 1:0 → **2**      | 2:2 → **2**      | 0:1 → **2**      | 1:0 → **2**      | (kein Tipp)            | (kein Tipp)            | 0:1                   |
-| NikolaTesla    | 0:2 → **0**      | (kein Tipp)      | 2:0 → **0**      | 0:3 → **0**      | 0:2 → **0**            | 3:0 → **0**            | 1:2                   |
-| RosaParks      | 2:0 → **5**      | 0:1 → **0**      | 1:2 → **3**      | 2:2 → **2**      | 1:0 → **0**            | (kein Tipp)            | 0:0                   |
-| **TestUser**   | 1:1 → **0**      | 2:2 → **2**      | 0:2 → **5**      | 3:3 → **2**      | 0:0 → **2**            | 1:0 → **0**            | 2:0                   |
-| AlbertEinstein | 3:0 → **3**      | 1:1 → **5**      | 1:1 → **2**      | (kein Tipp)      | 1:1 → **5**            | 0:0 → **5**            | (kein Tipp)           |
-| IsaacNewton    | (kein Tipp)      | 1:0 → **0**      | 2:1 → **0**      | 4:3 → **3**      | 2:1 → **0**            | 2:2 → **2**            | 1:1                   |
+| -------------- | ---------------- | ---------------- | ---------------- | ---------------- | --------------------- | --------------------- | --------------------- |
+| AdaLovelace    | 2:0 → **5**      | 1:1 → **5**      | 0:2 → **5**      | 3:2 → **5**      | 1:1 → **5**           | 0:0 → **5**           | 2:1 ESP:ITA           |
+| AlanTuring     | 3:1 → **3**      | 0:0 → **2**      | 1:3 → **3**      | 2:1 → **3**      | 2:2 → **2**           | 1:1 → **2**           | (kein Tipp)           |
+| MarieCurie     | 1:0 → **2**      | 2:2 → **2**      | 0:1 → **2**      | 1:0 → **2**      | (kein Tipp)           | (kein Tipp)           | 0:1                   |
+| NikolaTesla    | 0:2 → **0**      | (kein Tipp)      | 2:0 → **0**      | 0:3 → **0**      | 0:2 → **0**           | 3:0 → **0**           | 1:2                   |
+| RosaParks      | 2:0 → **5**      | 0:1 → **0**      | 1:2 → **3**      | 2:2 → **2**      | 1:0 → **0**           | (kein Tipp)           | 0:0                   |
+| **TestUser**   | 1:1 → **0**      | 2:2 → **2**      | 0:2 → **5**      | 3:3 → **2**      | 0:0 → **2**           | 1:0 → **0**           | 2:0                   |
+| AlbertEinstein | 3:0 → **3**      | 1:1 → **5**      | 1:1 → **2**      | (kein Tipp)      | 1:1 → **5**           | 0:0 → **5**           | (kein Tipp)           |
+| IsaacNewton    | (kein Tipp)      | 1:0 → **0**      | 2:1 → **0**      | 4:3 → **3**      | 2:1 → **0**           | 2:2 → **2**           | 1:1                   |
 
 **Erwartetes Ranking nach Seed (Match-Punkte, ohne Extra-Punkte für Winner='ESP')**:
+
 1. AdaLovelace — 30 P (alle 6 exakt, +0 weil ESP nur secretWinner: +6 = **36 P**)
 2. AlbertEinstein — 20 P (+0 ESP-Extra)
 3. AlanTuring — 15 P
@@ -934,18 +1152,20 @@ const TEAM = {
 
 ```ts
 // scripts/seed-dev.ts (Pseudocode)
-import { db } from '@/lib/db';
-import { user, match, tip, session } from '@/db/schema';
+import { db } from "@/lib/db";
+import { user, match, tip, session } from "@/db/schema";
 
-await db.delete(session);   // FK-Reihenfolge
+await db.delete(session); // FK-Reihenfolge
 await db.delete(tip);
 await db.delete(match);
 await db.delete(user);
 
 await db.insert(user).values(userSeed);
 await db.insert(match).values(matchSeed);
-await db.insert(tip).values(tipSeed);   // userId/matchId mapping pflegen
-console.log(`✓ seeded ${userSeed.length} users, ${matchSeed.length} matches, ${tipSeed.length} tips`);
+await db.insert(tip).values(tipSeed); // userId/matchId mapping pflegen
+console.log(
+  `✓ seeded ${userSeed.length} users, ${matchSeed.length} matches, ${tipSeed.length} tips`,
+);
 ```
 
 **Wichtig**: User-Passwörter beim Seed mit `Argon2id().hash('test123')` hashen, **nicht** den Hash hardcoden — sonst bricht's wenn man Argon2id-Params ändert.
@@ -972,19 +1192,20 @@ curl http://localhost:8080/rating | jq '.table.global[] | {name, score_sum}'
 
 ```ts
 // vitest.config.ts
-import { defineConfig } from 'vitest/config';
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env.test' });   // setzt DATABASE_URL=db/test.db
+import { defineConfig } from "vitest/config";
+import dotenv from "dotenv";
+dotenv.config({ path: ".env.test" }); // setzt DATABASE_URL=db/test.db
 
 export default defineConfig({
   test: {
-    setupFiles: ['./tests/setup.ts'],   // ruft seed-test.ts vor jedem Run
-    pool: 'forks',                       // saubere DB pro Worker (SQLite-Lock)
+    setupFiles: ["./tests/setup.ts"], // ruft seed-test.ts vor jedem Run
+    pool: "forks", // saubere DB pro Worker (SQLite-Lock)
   },
 });
 ```
 
 **`.env.test`** (im neuen Frontend-Repo):
+
 ```
 DATABASE_URL=../shared/db/test.db
 API_URL=http://localhost:8080
@@ -992,6 +1213,7 @@ NODE_ENV=test
 ```
 
 **`.env`** (Dev):
+
 ```
 DATABASE_URL=../shared/db/database.db
 API_URL=http://localhost:8080
@@ -1001,13 +1223,13 @@ API_URL=http://localhost:8080
 
 ### 20.10 Was migriert werden muss vs. neu zu schreiben
 
-| Quelle                                          | Aktion                           |
-|-------------------------------------------------|----------------------------------|
-| `em2024-frontend/scripts/demo_data.ts`          | **Verwerfen**, war unvollständig |
-| `betting-api/src/db/fixtures.rs`                | **Behalten** — bleibt für Rust-Tests in-memory |
-| `em2024-frontend/scripts/migrate.ts`            | 1:1 übernehmen (Drizzle-Standard) |
-| EM-Team-Liste aus `pages/signup.astro:56–80`    | Nach `lib/data/teams.ts` extrahieren |
-| Departments aus `pages/signup.astro:43–45`      | Nach `lib/data/departments.ts` extrahieren |
+| Quelle                                       | Aktion                                         |
+| -------------------------------------------- | ---------------------------------------------- |
+| `em2024-frontend/scripts/demo_data.ts`       | **Verwerfen**, war unvollständig               |
+| `betting-api/src/db/fixtures.rs`             | **Behalten** — bleibt für Rust-Tests in-memory |
+| `em2024-frontend/scripts/migrate.ts`         | 1:1 übernehmen (Drizzle-Standard)              |
+| EM-Team-Liste aus `pages/signup.astro:56–80` | Nach `lib/data/teams.ts` extrahieren           |
+| Departments aus `pages/signup.astro:43–45`   | Nach `lib/data/departments.ts` extrahieren     |
 
 ---
 
@@ -1032,12 +1254,12 @@ Das alte `em2024-frontend/` wird abgelöst. Damit geht die DB-Datei (heute `em20
 
 ### 21.2 Konkrete `.env`-Änderungen (alle drei Services)
 
-| Repo            | Heute                                                     | Neu                                                       |
-|-----------------|-----------------------------------------------------------|-----------------------------------------------------------|
-| `new-frontend/.env`   | (gab's nicht in dieser Form)                       | `DATABASE_URL=../shared/db/database.db`<br>`API_URL=http://localhost:8080` |
-| `new-frontend/.env.test` | `IS_TEST=1`, `API_URL=...`                      | `DATABASE_URL=../shared/db/test.db`<br>`API_URL=http://localhost:8080`<br>`NODE_ENV=test` |
-| `betting-api/.env`    | `DATABASE_URL=/path/to/your/database.sqlite`       | `DATABASE_URL=../shared/db/database.db`                  |
-| `macht-api/.env`      | `DB_PATH=../em2024-frontend/db/database.db`        | `DB_PATH=../shared/db/database.db`                       |
+| Repo                     | Heute                                        | Neu                                                                                       |
+| ------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `new-frontend/.env`      | (gab's nicht in dieser Form)                 | `DATABASE_URL=../shared/db/database.db`<br>`API_URL=http://localhost:8080`                |
+| `new-frontend/.env.test` | `IS_TEST=1`, `API_URL=...`                   | `DATABASE_URL=../shared/db/test.db`<br>`API_URL=http://localhost:8080`<br>`NODE_ENV=test` |
+| `betting-api/.env`       | `DATABASE_URL=/path/to/your/database.sqlite` | `DATABASE_URL=../shared/db/database.db`                                                   |
+| `macht-api/.env`         | `DB_PATH=../em2024-frontend/db/database.db`  | `DB_PATH=../shared/db/database.db`                                                        |
 
 → Eine zentrale Änderung pro Repo, kein Code-Eingriff in Rust nötig (`env::var("DB_PATH")` bzw. `"DATABASE_URL"` ist schon dynamisch).
 
@@ -1052,6 +1274,7 @@ Auf dem Server (heute `em2024.vcec.cloud` mit nginx + PM2):
 ```
 
 PM2-Env (`ecosystem.config.json`) für alle drei Services:
+
 ```
 DATABASE_URL=/var/lib/football-betting/database.db
 DB_PATH=/var/lib/football-betting/database.db
@@ -1080,18 +1303,20 @@ Wenn das neue Frontend live geht und das alte raus:
 ### 21.5 Konsequenz für `db/schema.ts`
 
 Drizzle-Schema (heute `em2024-frontend/db/schemas/schema.ts`) zieht **mit ins neue Frontend**:
+
 - Neuer Pfad: `new-frontend/db/schema.ts`
 - 1:1 übernehmen (siehe §1)
 - `drizzle.config.ts` im neuen Repo:
   ```ts
   export default {
-    schema: './db/schema.ts',
-    out:    './db/migrations',     // ← jetzt eingecheckt (§19.2)
+    schema: "./db/schema.ts",
+    out: "./db/migrations", // ← jetzt eingecheckt (§19.2)
     dbCredentials: { url: process.env.DATABASE_URL! },
   } satisfies Config;
   ```
 
 **Wichtig**: Drizzle-Migrations für die existierende DB (`database.db` aus em2024-frontend) müssen **kompatibel** sein, sonst dropt der erste Run die Tabellen. Vorgehen:
+
 - `drizzle-kit introspect` gegen die existierende DB → generiert Initial-Migration die "leeren" Drift produziert.
 - Diese als `0000_baseline.sql` committen.
 - Drizzle erkennt: Schema schon angewendet, macht nichts.

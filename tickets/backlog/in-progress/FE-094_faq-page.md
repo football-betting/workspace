@@ -13,7 +13,7 @@ low
 medium
 
 ## Status
-todo
+in-progress
 
 ## Owner
 implementer
@@ -55,7 +55,7 @@ Support-Rückfragen und erklärt das Spielprinzip an einer Stelle — zweisprach
 ## Acceptance Criteria
 - [ ] `GET /faq` rendert die Seite mit Titel und 3 Themenblöcken
       (Tippen & Regeln, Rangliste & Abteilungen, Konto & Technik).
-- [ ] Alle 12 Fragen werden als `<details>`-Accordion gerendert
+- [ ] Alle 14 Fragen werden als `<details>`-Accordion gerendert
       (Anzahl `<details>` == Anzahl Fragen).
 - [ ] In der K.-o.-Phase wird klargestellt, dass nur die reguläre Spielzeit
       (90 Min.) zählt — keine Verlängerung/Elfmeterschießen.

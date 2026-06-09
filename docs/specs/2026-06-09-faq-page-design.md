@@ -1,7 +1,7 @@
 # FAQ-Seite — Design
 
 **Datum:** 2026-06-09
-**Ticket:** FE-079 (`faq-page`)
+**Ticket:** FE-094 (`faq-page`)
 **Repo:** `frontend/`
 
 ## Hintergrund
@@ -40,9 +40,28 @@ import { TopAppBar } from "@/components/dashboard/TopAppBar";
 import { BottomNav } from "@/components/dashboard/BottomNav";
 
 const FAQ_SECTIONS = [
-  { key: "rules", items: ["howToTip", "deadline", "regularTimeOnly", "scoring", "winnerBonus", "secretWinner"] },
+  {
+    key: "rules",
+    items: [
+      "howToTip",
+      "deadline",
+      "regularTimeOnly",
+      "scoring",
+      "winnerBonus",
+      "secretWinner",
+    ],
+  },
   { key: "ranking", items: ["howRanking", "globalVsDepartment", "liveUpdate"] },
-  { key: "account", items: ["whoCanRegister", "passwordReset", "reminders", "installApp", "languages"] },
+  {
+    key: "account",
+    items: [
+      "whoCanRegister",
+      "passwordReset",
+      "reminders",
+      "installApp",
+      "languages",
+    ],
+  },
 ] as const;
 
 export default async function FaqPage(): Promise<React.ReactElement> {
@@ -90,32 +109,32 @@ Zweiter `<Link href="/faq">` neben dem bestehenden Features-Link in
 
 ### Block „Tippen & Regeln" / "Tipping & Rules"
 
-| Key | Frage (DE) | Antwort (DE, gekürzt) |
-|-----|------------|------------------------|
-| `howToTip` | Wie gebe ich einen Tipp ab? | Auf dem Dashboard jedes anstehende Spiel auswählen, Tore für Heim und Gast eintragen und speichern. Ein Tipp pro Spiel. |
-| `deadline` | Bis wann kann ich tippen? | Bis zum Anpfiff. Vorher lässt sich der Tipp beliebig oft ändern, danach ist er gesperrt. |
+| Key               | Frage (DE)                           | Antwort (DE, gekürzt)                                                                                                                          |
+| ----------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `howToTip`        | Wie gebe ich einen Tipp ab?          | Auf dem Dashboard jedes anstehende Spiel auswählen, Tore für Heim und Gast eintragen und speichern. Ein Tipp pro Spiel.                        |
+| `deadline`        | Bis wann kann ich tippen?            | Bis zum Anpfiff. Vorher lässt sich der Tipp beliebig oft ändern, danach ist er gesperrt.                                                       |
 | `regularTimeOnly` | Welche Spielzeit zählt für den Tipp? | Gewertet wird die reguläre Spielzeit (90 Min. inkl. Nachspielzeit). In der K.-o.-Phase zählen Verlängerung und Elfmeterschießen **nicht** mit. |
-| `scoring` | Wie werden Punkte vergeben? | 5 Punkte exaktes Ergebnis · 3 Punkte richtige Tordifferenz (kein Remis) · 2 Punkte richtige Tendenz bzw. korrektes Remis · 0 Punkte sonst. |
-| `winnerBonus` | Was bringt der Turniersieger-Tipp? | Wird dein offen gewählter Weltmeister tatsächlich Weltmeister, gibt es **+12 Bonuspunkte**. |
-| `secretWinner` | Was ist der „Secret Winner"? | Ein zweiter, geheimer Sieger-Tipp (≠ offener Tipp). Wird dieses Team Weltmeister, gibt es **+6 Bonuspunkte**. |
+| `scoring`         | Wie werden Punkte vergeben?          | 5 Punkte exaktes Ergebnis · 3 Punkte richtige Tordifferenz (kein Remis) · 2 Punkte richtige Tendenz bzw. korrektes Remis · 0 Punkte sonst.     |
+| `winnerBonus`     | Was bringt der Turniersieger-Tipp?   | Wird dein offen gewählter Weltmeister tatsächlich Weltmeister, gibt es **+12 Bonuspunkte**.                                                    |
+| `secretWinner`    | Was ist der „Secret Winner"?         | Ein zweiter, geheimer Sieger-Tipp (≠ offener Tipp). Wird dieses Team Weltmeister, gibt es **+6 Bonuspunkte**.                                  |
 
 ### Block „Rangliste & Abteilungen" / "Ranking & Departments"
 
-| Key | Frage (DE) | Antwort (DE, gekürzt) |
-|-----|------------|------------------------|
-| `howRanking` | Wie funktioniert die Rangliste? | Punkte aus allen gewerteten Spielen plus Boni werden summiert; die Rangliste sortiert nach Gesamtpunkten. |
-| `globalVsDepartment` | Global vs. Abteilung? | Es gibt eine globale Rangliste und je eine pro Abteilung (Langenfeld, Mannheim, Mainz) — umschaltbar über Tabs. |
-| `liveUpdate` | Wann werden meine Punkte aktualisiert? | Während laufender Spiele live; Spielstände und Punkte aktualisieren sich automatisch. |
+| Key                  | Frage (DE)                             | Antwort (DE, gekürzt)                                                                                           |
+| -------------------- | -------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `howRanking`         | Wie funktioniert die Rangliste?        | Punkte aus allen gewerteten Spielen plus Boni werden summiert; die Rangliste sortiert nach Gesamtpunkten.       |
+| `globalVsDepartment` | Global vs. Abteilung?                  | Es gibt eine globale Rangliste und je eine pro Abteilung (Langenfeld, Mannheim, Mainz) — umschaltbar über Tabs. |
+| `liveUpdate`         | Wann werden meine Punkte aktualisiert? | Während laufender Spiele live; Spielstände und Punkte aktualisieren sich automatisch.                           |
 
 ### Block „Konto & Technik" / "Account & Tech"
 
-| Key | Frage (DE) | Antwort (DE, gekürzt) |
-|-----|------------|------------------------|
-| `whoCanRegister` | Wer kann sich registrieren? | Mitarbeitende mit einer valantic-E-Mail-Adresse. |
-| `passwordReset` | Passwort vergessen? | Auf der Login-Seite „Passwort vergessen?" wählen, E-Mail eingeben — es kommt ein Link zum Zurücksetzen per Mail. |
-| `reminders` | Werde ich an Spiele erinnert? | Nur wenn du es aktivierst: in den Einstellungen mindestens einen Kanal einschalten — Push (im Browser/PWA) und/oder E-Mail. Danach kannst du die Vorlaufzeiten wählen; ohne aktiven Kanal werden keine Erinnerungen verschickt. |
-| `installApp` | Kann ich die App installieren? | Ja, als PWA installierbar (Homescreen), inkl. Offline-Unterstützung und Push. |
-| `languages` | In welchen Sprachen gibt es die App? | Deutsch und Englisch. Am Desktop schaltest du die Sprache oben im Header um, auf dem Smartphone bzw. in der PWA in den Einstellungen. |
+| Key              | Frage (DE)                           | Antwort (DE, gekürzt)                                                                                                                                                                                                           |
+| ---------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `whoCanRegister` | Wer kann sich registrieren?          | Mitarbeitende mit einer valantic-E-Mail-Adresse.                                                                                                                                                                                |
+| `passwordReset`  | Passwort vergessen?                  | Auf der Login-Seite „Passwort vergessen?" wählen, E-Mail eingeben — es kommt ein Link zum Zurücksetzen per Mail.                                                                                                                |
+| `reminders`      | Werde ich an Spiele erinnert?        | Nur wenn du es aktivierst: in den Einstellungen mindestens einen Kanal einschalten — Push (im Browser/PWA) und/oder E-Mail. Danach kannst du die Vorlaufzeiten wählen; ohne aktiven Kanal werden keine Erinnerungen verschickt. |
+| `installApp`     | Kann ich die App installieren?       | Ja, als PWA installierbar (Homescreen), inkl. Offline-Unterstützung und Push.                                                                                                                                                   |
+| `languages`      | In welchen Sprachen gibt es die App? | Deutsch und Englisch. Am Desktop schaltest du die Sprache oben im Header um, auf dem Smartphone bzw. in der PWA in den Einstellungen.                                                                                           |
 
 Die englischen Texte sind sinngemäße Übersetzungen derselben Inhalte.
 
@@ -123,24 +142,32 @@ Die englischen Texte sind sinngemäße Übersetzungen derselben Inhalte.
 
 `frontend/`, Vitest:
 
-1. **Render-Test** (`app/(app)/faq/__tests__/page.test.tsx` o. ä.): Seite mit
-   `NextIntlClientProvider`/`de`-Messages rendern → Titel sichtbar, jede der 12
-   Fragen vorhanden, Anzahl `<details>`-Elemente == Anzahl Fragen.
-2. **Übersetzungs-Paritäts-Test**: `FAQ`-Key-Baum in `de.json` und `en.json`
-   tief vergleichen → identische Key-Struktur, keine leeren Strings.
+Das Vitest-Setup läuft im `node`-Environment und sammelt nur
+`tests/unit/**/*.test.ts` — ein echter RSC-Render-Test (async Server Component,
+`server-only`) ist hier nicht möglich. Stattdessen wird die FAQ-Struktur in
+`lib/faq.ts` ausgelagert und gegen die Übersetzungen geprüft:
+
+1. **Content-Test** (`tests/unit/faq-content.test.ts`): `FAQ_SECTIONS` aus
+   `lib/faq.ts` deckt 14 Fragen ab, keine doppelten Keys; für jeden Key
+   existiert in `de.json` und `en.json` ein nicht-leeres `q`/`a` plus
+   Section-`heading`. Die Seite rendert genau ein `<details>` pro Item,
+   die Item-Anzahl ist damit der maßgebliche Invariant.
+2. **Übersetzungs-Paritäts-Test** (bestehend, `tests/unit/i18n-messages.test.ts`):
+   `de.json`/`en.json` haben identische Key-Struktur und keine leeren Strings —
+   deckt die neuen `FAQ`-Keys automatisch ab.
 
 Quality Gate `frontend/`: `prettier --write`, `tsc --noEmit`, `vitest run`.
 
 ## Betroffene Dateien
 
-| Datei | Änderung |
-|-------|----------|
-| `frontend/app/(app)/faq/page.tsx` | **neu** — FAQ-Seite |
-| `frontend/messages/de.json` | `FAQ`-Block + `Footer.faqHeading` |
-| `frontend/messages/en.json` | `FAQ`-Block + `Footer.faqHeading` |
-| `frontend/components/Footer.tsx` | `/faq`-Link |
-| `frontend/app/(app)/faq/__tests__/…` | **neu** — Tests |
-| `docs/FRONTEND_FUNKTIONS_SPEC.md` | Spec-Sync (siehe unten) |
+| Datei                                | Änderung                          |
+| ------------------------------------ | --------------------------------- |
+| `frontend/app/(app)/faq/page.tsx`    | **neu** — FAQ-Seite               |
+| `frontend/messages/de.json`          | `FAQ`-Block + `Footer.faqHeading` |
+| `frontend/messages/en.json`          | `FAQ`-Block + `Footer.faqHeading` |
+| `frontend/components/Footer.tsx`     | `/faq`-Link                       |
+| `frontend/app/(app)/faq/__tests__/…` | **neu** — Tests                   |
+| `docs/FRONTEND_FUNKTIONS_SPEC.md`    | Spec-Sync (siehe unten)           |
 
 ## Spec-Sync (Doku an Ist-Stand angleichen)
 
