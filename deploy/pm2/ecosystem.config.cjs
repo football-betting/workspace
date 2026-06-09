@@ -19,7 +19,9 @@ module.exports = {
       script: "pnpm",
       // Bind to loopback only — nginx proxies to 127.0.0.1:3000, so the app is
       // never reachable on the public IP:3000 (which would bypass Cloudflare).
-      args: "start -- -H 127.0.0.1",
+      // Use `pnpm exec next start -H …`: `pnpm start -- -H …` makes next-start
+      // treat `-H` as the project dir and crash-loops on every (re)start.
+      args: "exec next start -H 127.0.0.1",
       autorestart: true,
       max_memory_restart: "600M",
     },
