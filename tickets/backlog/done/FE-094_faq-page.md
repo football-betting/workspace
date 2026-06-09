@@ -13,7 +13,7 @@ low
 medium
 
 ## Status
-in-progress
+done
 
 ## Owner
 implementer
